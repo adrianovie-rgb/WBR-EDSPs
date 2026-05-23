@@ -1,5 +1,5 @@
 var D = {
-  "lastUpdate": "Sat May 23 2026 00:00:00 GMT-0300 (Brasilia Standard Time) Sat Dec 30 1899 00:32:00 GMT-0306 (Brasilia Standard Time)",
+  "lastUpdate": "Sat May 23 2026 00:00:00 GMT-0300 (Brasilia Standard Time) Sat Dec 30 1899 00:40:00 GMT-0306 (Brasilia Standard Time)",
   "meta": {
     "ppp": 175,
     "recv": 98.5,
