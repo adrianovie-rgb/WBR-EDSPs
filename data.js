@@ -1,5 +1,5 @@
 var D = {
-  "lastUpdate": "Fri May 22 2026 00:00:00 GMT-0300 (Brasilia Standard Time) Sat Dec 30 1899 21:14:00 GMT-0306 (Brasilia Standard Time)",
+  "lastUpdate": "Sat May 23 2026 00:00:00 GMT-0300 (Brasilia Standard Time) Sat Dec 30 1899 00:32:00 GMT-0306 (Brasilia Standard Time)",
   "meta": {
     "ppp": 175,
     "recv": 98.5,
@@ -1101,67 +1101,92 @@ var D = {
     }
   },
   "tph": {
-    "ECB8": {
+    "Sat Dec 30 1899 23:59:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EGO8": {
+    "Sat Dec 30 1899 23:30:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "ERS8": {
+    "Sat Dec 30 1899 21:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "ESB8": {
+    "Sat Dec 30 1899 22:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "ESE8": {
+    "Sat Dec 30 1899 20:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EIJ8": {
+    "Sat Dec 30 1899 19:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EJO8": {
+    "Sat Dec 30 1899 08:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "ELO8": {
+    "Sat Dec 30 1899 22:30:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EME8": {
+    "Sat Dec 30 1899 10:30:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EMR8": {
+    "Sat Dec 30 1899 06:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EOZ8": {
+    "Sat Dec 30 1899 17:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EUM8": {
+    "Sat Dec 30 1899 20:30:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
     },
-    "EVE8": {
+    "Sat Dec 30 1899 16:00:00 GMT-0306 (Brasilia Standard Time)": {
+      "target": null,
+      "w_anterior": null,
+      "w_atual": null
+    },
+    "Sat Dec 30 1899 18:00:00 GMT-0306 (Brasilia Standard Time)": {
+      "target": null,
+      "w_anterior": null,
+      "w_atual": null
+    },
+    "Sat Dec 30 1899 16:30:00 GMT-0306 (Brasilia Standard Time)": {
+      "target": null,
+      "w_anterior": null,
+      "w_atual": null
+    },
+    "Sat Dec 30 1899 02:00:00 GMT-0306 (Brasilia Standard Time)": {
+      "target": null,
+      "w_anterior": null,
+      "w_atual": null
+    },
+    "Sat Dec 30 1899 00:29:00 GMT-0306 (Brasilia Standard Time)": {
+      "target": null,
+      "w_anterior": null,
+      "w_atual": null
+    },
+    "Sat Dec 30 1899 01:00:00 GMT-0306 (Brasilia Standard Time)": {
       "target": null,
       "w_anterior": null,
       "w_atual": null
