@@ -739,23 +739,59 @@ function renderTendencia() {
   var allSems = D.semanas || [];
   var idx = allSems.indexOf(sem);
   var container = document.getElementById("tendenciaContent");
+  container.innerHTML = "";
 
   if (trendMode === "semanal") {
-    var semsToShow = allSems.slice(Math.max(0, idx - 4), idx + 1);
-    var svgId = "tendSemChart";
-    container.innerHTML = '<div class="legend" id="tendLegend"></div>'
-      + '<div class="chart-container"><h3>Receive % - Tendencia Semanal</h3>'
-      + '<svg id="' + svgId + '" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg></div>';
+    var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
+
+    // Definição dos 4 KPIs a exibir
+    var kpis = [
+      {
+        key: "receive", label: "Receive Success %", meta: 98.5, metaLabel: "98.5%", isPercent: true,
+        getVal: function(nd, s) { var d = getNodeData(nd, s); return d ? normPct(d.receive) : null; }
+      },
+      {
+        key: "stow", label: "Stow Success %", meta: 99.5, metaLabel: "99.5%", isPercent: true,
+        getVal: function(nd, s) { var d = getNodeData(nd, s); return d ? normPct(d.stow) : null; }
+      },
+      {
+        key: "depart", label: "Departure Success %", meta: 99.5, metaLabel: "99.5%", isPercent: true,
+        getVal: function(nd, s) { var d = getNodeData(nd, s); return d ? normPct(d.depart) : null; }
+      },
+      {
+        key: "ppp", label: "Packages Per Pallet (PPP)", meta: 175, metaLabel: "Meta 175", isPercent: false,
+        getVal: function(nd, s) { var d = getNodeData(nd, s); return d ? d.ppp : null; }
+      }
+    ];
+
+    // Legenda (uma vez, no topo)
+    var legendDiv = document.createElement("div");
+    legendDiv.className = "legend";
+    legendDiv.id = "tendLegend";
+    container.appendChild(legendDiv);
     buildLegend("tendLegend", filtered);
-    renderLineChart(svgId, filtered, semsToShow,
-      function(nd,s){ var d=getNodeData(nd,s); return d?normPct(d.receive):null; },
-      98.5, "98.5%", true);
+
+    // Gerar 1 gráfico por KPI
+    kpis.forEach(function(kpi, ki) {
+      var chartDiv = document.createElement("div");
+      chartDiv.className = "chart-container";
+      var svgId = "tendSem_" + kpi.key;
+      chartDiv.innerHTML = '<h3>' + kpi.label + ' — Ultimas ' + semsToShow.length + ' semanas</h3>'
+        + '<div class="chart-meta">Meta: ' + kpi.metaLabel + '</div>'
+        + '<svg id="' + svgId + '" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>';
+      container.appendChild(chartDiv);
+      renderLineChart(svgId, filtered, semsToShow, kpi.getVal, kpi.meta, kpi.metaLabel, kpi.isPercent);
+    });
+
   } else {
+    // Daily mode
     if (!D.daily || Object.keys(D.daily).length === 0) {
       container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
         + 'Dados diarios ainda nao disponiveis.<br><small>Fonte: shipment_level.csv</small></div>';
       return;
     }
+
+    // Coletar datas disponíveis para nodes filtrados
     var datesSet = {};
     Object.keys(D.daily).forEach(function(k) {
       var parts = k.split("|");
@@ -763,19 +799,44 @@ function renderTendencia() {
       if (filtered.indexOf(nd) > -1) datesSet[parts[0]] = true;
     });
     var dates = Object.keys(datesSet).sort().slice(-6);
-    container.innerHTML = '<div class="legend" id="tendDailyLegend"></div>'
-      + '<div class="chart-container"><h3>Miss Diarios - Tendencia</h3>'
-      + '<svg id="tendDailyChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg></div>';
+
+    if (dates.length === 0) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
+        + 'Sem dados diarios para os nodes selecionados.</div>';
+      return;
+    }
+
+    // Legenda
+    var legendDiv2 = document.createElement("div");
+    legendDiv2.className = "legend";
+    legendDiv2.id = "tendDailyLegend";
+    container.appendChild(legendDiv2);
     buildLegend("tendDailyLegend", filtered);
-    renderLineChart("tendDailyChart", filtered, dates,
-      function(nd, dt) {
-        var key = dt + "|" + nd;
-        if (!D.daily[key]) return null;
-        return D.daily[key].miss_real;
-      }, null, null, false);
+
+    // Gráficos diários: Stow Miss e Departure Miss
+    var dailyKpis = [
+      { key: "stow_miss", label: "Stow Miss Diario (pos D+1)", field: "stow_miss_real" },
+      { key: "dep_miss", label: "Departure Miss Diario (pos D+1)", field: "dep_miss_real" },
+      { key: "miss_total", label: "Total Miss Diario", field: "miss_real" }
+    ];
+
+    dailyKpis.forEach(function(dk) {
+      var chartDiv2 = document.createElement("div");
+      chartDiv2.className = "chart-container";
+      var svgId2 = "tendDaily_" + dk.key;
+      chartDiv2.innerHTML = '<h3>' + dk.label + ' — Ultimos ' + dates.length + ' dias</h3>'
+        + '<div class="chart-meta">Miss reais (pos-correcao D+1)</div>'
+        + '<svg id="' + svgId2 + '" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>';
+      container.appendChild(chartDiv2);
+      renderLineChart(svgId2, filtered, dates,
+        function(nd, dt) {
+          var key = dt + "|" + nd;
+          if (!D.daily[key]) return null;
+          return D.daily[key][dk.field] !== undefined ? D.daily[key][dk.field] : D.daily[key].miss_real;
+        }, null, null, false);
+    });
   }
 }
-
 // ============================================================
 // RANKING — Score + Tiebreakers: Stow > Recv > Dep > Vol > PPP
 // ============================================================
