@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -15,9 +16,6 @@ header h1{font-size:1.6rem}
 header .subtitle{opacity:.8;font-size:.95rem;margin-top:4px}
 .update-info{display:flex;align-items:center;gap:12px}
 .update-info span{font-size:.85rem;opacity:.8}
-#btnUpdate{background:#3b82f6;border:none;color:white;padding:10px 20px;
-           border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600}
-#btnUpdate:hover{background:#2563eb}
 .filters-bar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;
              padding:14px 24px;margin-bottom:16px;
              display:flex;gap:20px;align-items:center;flex-wrap:wrap;
@@ -57,7 +55,6 @@ tr:hover{background:#f8fafc}
           font-size:.8rem;font-weight:600;margin-right:4px}
 .badge-d1{display:inline-block;font-size:.7rem;background:#fff3cd;color:#92400e;
           padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
-/* Podium */  
 .podium-container{display:flex;justify-content:center;align-items:flex-end;
                   gap:40px;margin:50px 0}
 .podium-item{text-align:center;animation:podiumRise .8s ease forwards;
@@ -79,7 +76,6 @@ tr:hover{background:#f8fafc}
 .podium-node{font-size:1.5rem;font-weight:800}
 .podium-score{font-size:1rem;opacity:.9;margin-top:6px}
 .podium-ppp{font-size:.85rem;opacity:.8;margin-top:4px}
-/* Confetti */  
 .confetti{position:fixed;top:0;left:0;width:100%;height:100%;
           pointer-events:none;z-index:9999}
 .confetti-piece{position:absolute;width:10px;height:10px;top:-10px;
@@ -88,21 +84,17 @@ tr:hover{background:#f8fafc}
   0%{transform:translateY(-10px) rotate(0deg);opacity:1}
   100%{transform:translateY(100vh) rotate(720deg);opacity:0}
 }
-/* Charts */  
 .chart-container{background:white;border:1px solid #e2e8f0;border-radius:12px;
                  padding:28px;margin:24px 0}
 .chart-container h3{font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:4px}
 .chart-container .chart-meta{font-size:.85rem;color:#64748b;margin-bottom:16px}
 .chart-container svg{width:100%;height:300px}
-/* Legend */  
 .legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:.8rem}
 .legend-dot{width:12px;height:12px;border-radius:3px}
-/* Success msg */  
 .success-msg{background:#dcfce7;border:1px solid #86efac;border-radius:8px;
              padding:20px;text-align:center;margin:20px 0}
 .success-msg span{font-size:1.3rem;font-weight:700;color:#166534}
-/* Trend mode toggle */  
 .trend-toggle{display:flex;gap:4px;margin-bottom:16px}
 .trend-toggle button{padding:6px 14px;border:1px solid #e2e8f0;background:#fff;
                      border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .2s}
@@ -136,16 +128,6 @@ tr:hover{background:#f8fafc}
   <div class="filter-group">
     <label>Semana:</label>
     <select id="filtroSemana"></select>
-  </div>
-  <div class="filter-group">
-    <label>Metrica (Ranking):</label>
-    <select id="filtroMetrica">
-      <option value="ppp">PPP</option>
-      <option value="receive">Receive %</option>
-      <option value="stow">Stow %</option>
-      <option value="depart">Depart %</option>
-      <option value="volume">Volume</option>
-    </select>
   </div>
 </div>
 
@@ -244,9 +226,13 @@ tr:hover{background:#f8fafc}
 
 <div class="panel" id="panel-ranking">
   <div class="section-title">Ranking - Performance Consolidada</div>
+  <p style="font-size:.85rem;color:#64748b;margin-bottom:12px">
+    Score = media(Recv-98.5, Stow-99.5, Dep-99.5, OTD-100, CPT-100)/5.
+    Desempate: Stow > Recv > Dep > Volume > PPP.
+  </p>
   <div class="podium-container" id="podiumContainer"></div>
   <div style="text-align:center;margin-top:24px">
-    <table style="margin:0 auto;max-width:800px">
+    <table style="margin:0 auto;max-width:900px">
       <thead><tr>
         <th>#</th><th>Node</th><th>Grupo</th>
         <th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>
@@ -262,12 +248,12 @@ tr:hover{background:#f8fafc}
 <script>
 (function(){
 // ============================================================
-// CONFIG & COLORS
+// CONFIG & COLORS (EOZ8 removido)
 // ============================================================
 var NODE_COLORS = {
   ECB8:"#e74c3c", ESE8:"#3498db", ESB8:"#2ecc71", ERS8:"#9b59b6",
   EGO8:"#1abc9c", EXS9:"#34495e", EIJ8:"#e67e22", EUM8:"#f39c12",
-  EVE8:"#16a085", EOZ8:"#8e44ad", EMR8:"#c0392b", ELO8:"#27ae60",
+  EVE8:"#16a085", EMR8:"#c0392b", ELO8:"#27ae60",
   EJO8:"#2980b9", EME8:"#d35400"
 };
 var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 };
@@ -276,13 +262,10 @@ var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 
 // HELPERS
 // ============================================================
 
-// *** FIX 1: OTD/CPT display - values come as percentages (e.g. 98.334, 100)
-//     Display directly WITHOUT multiplying. Only multiply if value <= 1.0 (decimal format) ***
 function fmtPct(v) {
   if (v === null || v === undefined) return "-";
   var n = Number(v);
   if (isNaN(n)) return "-";
-  // If value > 1 it is already a percentage (e.g. 98.334 -> display as 98.33%)
   var pct = n > 1 ? n : n * 100;
   return pct.toFixed(2) + "%";
 }
@@ -315,7 +298,6 @@ function getExtras(nd, sem) {
   return D.extras[nd][sem] || null;
 }
 
-// Normalize percentage value (handles both decimal <=1 and % >=1)
 function normPct(v) {
   if (v === null || v === undefined) return null;
   var n = Number(v);
@@ -326,51 +308,47 @@ function getFilteredNodes() {
   var grupo = document.getElementById("filtroGrupo").value;
   var node  = document.getElementById("filtroNode").value;
   if (node !== "todos") return [node];
-  if (grupo !== "todos") return D.grupos[grupo] || [];
+  if (grupo !== "todos") return (D.grupos[grupo] || []).filter(function(nd){ return !!D.nodes[nd]; });
   return Object.keys(D.nodes).sort();
 }
 
-function getNextSemana(sem) {
-  var idx = D.semanas.indexOf(sem);
-  return idx < D.semanas.length - 1 ? D.semanas[idx + 1] : null;
-}
-
 // ============================================================
-// CHART RENDERING WITH PILL-LABELS AND COLLISION DETECTION
-// *** FIX 3: Pill-label style (rounded rect rx=4), each filled with node color,
-//     white bold text inside, JavaScript collision detection that tests positions
-//     above/below/left/right to avoid any overlap between labels ***
+// CHART RENDERING — PILL-LABELS ONLY ON LAST POINT
+// Collision detection robusta com 12 posicoes + fallback progressivo
 // ============================================================
 
 function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel, isPercent) {
   var svg = document.getElementById(svgId);
   if (!svg) return;
-  var PAD_L=70, PAD_R=20, PAD_T=30, PAD_B=55;
+  var PAD_L=70, PAD_R=130, PAD_T=30, PAD_B=55;
   var W=900, H=300;
   var chartW = W - PAD_L - PAD_R;
   var chartH = H - PAD_T - PAD_B;
 
-  // Collect all values to determine Y range
   var allVals = [];
   filteredNodes.forEach(function(nd) {
     semanas.forEach(function(sem) {
       var v = getData(nd, sem);
-      if (v !== null && v !== undefined) allVals.push(Number(v));
+      if (v !== null && v !== undefined && !isNaN(Number(v))) allVals.push(Number(v));
     });
   });
-  if (allVals.length === 0) { svg.innerHTML = '<text x="450" y="150" text-anchor="middle" fill="#64748b" font-size="14">Sem dados</text>'; return; }
+  if (meta !== null && meta !== undefined) allVals.push(meta);
+  if (allVals.length === 0) {
+    svg.innerHTML = '<text x="450" y="150" text-anchor="middle" fill="#64748b" font-size="14">Sem dados</text>';
+    return;
+  }
 
   var minVal = Math.min.apply(null, allVals);
   var maxVal = Math.max.apply(null, allVals);
-  if (meta !== null) { minVal = Math.min(minVal, meta * 0.97); maxVal = Math.max(maxVal, meta * 1.01); }
   var range = maxVal - minVal;
   if (range === 0) range = 1;
-  var pad = range * 0.1;
-  minVal -= pad; maxVal += pad;
+  var pad = range * 0.15;
+  minVal -= pad;
+  maxVal += pad;
   range = maxVal - minVal;
 
   function xPos(sIdx) { return PAD_L + (sIdx / Math.max(semanas.length - 1, 1)) * chartW; }
-  function yPos(v)    { return PAD_T + chartH - ((v - minVal) / range) * chartH; }
+  function yPos(v) { return PAD_T + chartH - ((v - minVal) / range) * chartH; }
 
   var html = "";
 
@@ -379,8 +357,8 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     var gv = minVal + (range / 4) * gi;
     var gy = yPos(gv);
     var label = isPercent ? gv.toFixed(1) + "%" : gv.toFixed(0);
-    html += '<line x1="' + PAD_L + '" y1="' + gy + '" x2="' + (W-PAD_R) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="1"/>';
-    html += '<text x="' + (PAD_L-6) + '" y="' + (gy+4) + '" font-size="9" fill="#64748b" text-anchor="end">' + label + '</text>';
+    html += '<line x1="' + PAD_L + '" y1="' + gy + '" x2="' + (W - PAD_R) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="1"/>';
+    html += '<text x="' + (PAD_L - 6) + '" y="' + (gy + 4) + '" font-size="9" fill="#64748b" text-anchor="end">' + label + '</text>';
   }
 
   // X axis labels
@@ -390,78 +368,109 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
   });
 
   // Meta line
-  if (meta !== null) {
+  if (meta !== null && meta !== undefined) {
     var my = yPos(meta);
-    html += '<line x1="' + PAD_L + '" y1="' + my + '" x2="' + (W-PAD_R) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    html += '<text x="' + (W-PAD_R+4) + '" y="' + (my+4) + '" font-size="9" fill="#ef4444">' + metaLabel + '</text>';
+    html += '<line x1="' + PAD_L + '" y1="' + my + '" x2="' + (W - PAD_R) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
+    html += '<text x="' + (W - PAD_R + 4) + '" y="' + (my + 4) + '" font-size="9" fill="#ef4444" font-weight="600">' + (metaLabel || "Meta") + '</text>';
   }
 
-  // Collect label positions for collision detection
+  // Collision detection system
   var placedLabels = [];
 
   function rectOverlap(a, b) {
-    return !(a.x + a.w < b.x || b.x + b.w < a.x ||
-             a.y + a.h < b.y || b.y + b.h < a.y);
+    return !(a.x + a.w + 2 < b.x || b.x + b.w + 2 < a.x ||
+             a.y + a.h + 2 < b.y || b.y + b.h + 2 < a.y);
   }
 
   function findFreePos(cx, cy, lw, lh) {
     var offsets = [
-      { dx: -lw/2, dy: -lh - 8 },   // above
-      { dx: -lw/2, dy: 8 },          // below
-      { dx: 6,     dy: -lh/2 },      // right
-      { dx: -lw - 6, dy: -lh/2 },   // left
-      { dx: -lw/2, dy: -lh - 18 },  // above far
-      { dx: -lw/2, dy: 18 },         // below far
-      { dx: 12,    dy: -lh/2 },      // right far
-      { dx: -lw - 12, dy: -lh/2 }   // left far
+      { dx: 8,       dy: -lh/2 },
+      { dx: 8,       dy: -lh - 2 },
+      { dx: 8,       dy: 4 },
+      { dx: -lw - 8, dy: -lh/2 },
+      { dx: -lw - 8, dy: -lh - 2 },
+      { dx: -lw - 8, dy: 4 },
+      { dx: -lw/2,   dy: -lh - 10 },
+      { dx: -lw/2,   dy: 10 },
+      { dx: 14,      dy: -lh - 8 },
+      { dx: 14,      dy: 10 },
+      { dx: -lw - 14, dy: -lh - 8 },
+      { dx: -lw - 14, dy: 10 }
     ];
     for (var oi = 0; oi < offsets.length; oi++) {
       var rx = cx + offsets[oi].dx;
       var ry = cy + offsets[oi].dy;
+      if (rx < 5 || rx + lw > W - 5) continue;
+      if (ry < 5 || ry + lh > H - 10) continue;
       var cand = { x: rx, y: ry, w: lw, h: lh };
       var ok = true;
       for (var pi = 0; pi < placedLabels.length; pi++) {
         if (rectOverlap(cand, placedLabels[pi])) { ok = false; break; }
       }
-      // Keep within chart bounds
-      if (rx < PAD_L - 10 || rx + lw > W - 5) ok = false;
-      if (ry < 5 || ry + lh > H - 5) ok = false;
       if (ok) return { x: rx, y: ry };
     }
-    // Fallback: just place above
-    return { x: cx - lw/2, y: cy - lh - 8 };
+    // Progressive fallback
+    for (var att = 0; att < 20; att++) {
+      var stackY = cy - lh/2 - (att + 1) * (lh + 4);
+      var stackX = cx + 8;
+      if (stackX + lw > W - 5) stackX = cx - lw - 8;
+      if (stackY < 5) stackY = cy + 4 + att * (lh + 4);
+      if (stackY + lh > H - 10) continue;
+      if (stackX < 5) continue;
+      var fallCand = { x: stackX, y: stackY, w: lw, h: lh };
+      var fallOk = true;
+      for (var fi = 0; fi < placedLabels.length; fi++) {
+        if (rectOverlap(fallCand, placedLabels[fi])) { fallOk = false; break; }
+      }
+      if (fallOk) return { x: stackX, y: stackY };
+    }
+    return { x: cx + 8, y: cy - lh - 8 - placedLabels.length * 3 };
   }
 
-  // Draw lines and points
+  // Draw lines, points, and pill-labels (ONLY on last point)
   filteredNodes.forEach(function(nd) {
     var color = nodeColor(nd);
     var points = [];
     semanas.forEach(function(sem, si) {
       var v = getData(nd, sem);
-      if (v !== null && v !== undefined) {
+      if (v !== null && v !== undefined && !isNaN(Number(v))) {
         points.push({ x: xPos(si), y: yPos(Number(v)), v: Number(v) });
       }
     });
     if (points.length === 0) return;
-    // Draw polyline
+
+    // Polyline
     if (points.length > 1) {
-      var pts = points.map(function(p){ return p.x+","+p.y; }).join(" ");
-      html += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5"/>';
+      var pts = points.map(function(p) { return p.x + "," + p.y; }).join(" ");
+      html += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     }
-    // Draw points and pill-labels
+
+    // Data point circles
     points.forEach(function(pt) {
-      html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + color + '"/>';
-      var lbl = isPercent ? pt.v.toFixed(2) + "%" : pt.v.toFixed(1);
-      var lw = Math.max(lbl.length * 5.5 + 10, 36);
-      var lh = 16;
-      var pos = findFreePos(pt.x, pt.y, lw, lh);
-      placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
-      // Pill rect filled with node color
-      html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '"/>';
-      // White bold text inside pill
-      html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '"'
-            + ' font-size="9" fill="white" text-anchor="middle" font-weight="700">' + lbl + '</text>';
+      html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + color + '" stroke="#fff" stroke-width="1.5"/>';
     });
+
+    // PILL-LABEL ONLY ON LAST POINT (node name + value)
+    var lastPt = points[points.length - 1];
+    var valText = isPercent ? lastPt.v.toFixed(2) + "%" : lastPt.v.toFixed(1);
+    var lblText = nd + " " + valText;
+    var lw = Math.max(lblText.length * 5.8 + 12, 44);
+    var lh = 17;
+    var pos = findFreePos(lastPt.x, lastPt.y, lw, lh);
+    placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
+
+    // Pill rectangle
+    html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '" opacity="0.92"/>';
+    // White bold text inside pill
+    html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '" font-size="8.5" fill="white" text-anchor="middle" font-weight="700">' + lblText + '</text>';
+
+    // Connector line (dashed)
+    var connX = pos.x < lastPt.x ? pos.x + lw : pos.x;
+    var connY = pos.y + lh/2;
+    var dist = Math.sqrt(Math.pow(lastPt.x - connX, 2) + Math.pow(lastPt.y - connY, 2));
+    if (dist > 12) {
+      html += '<line x1="' + lastPt.x + '" y1="' + lastPt.y + '" x2="' + connX + '" y2="' + connY + '" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
+    }
   });
 
   svg.innerHTML = html;
@@ -478,15 +487,13 @@ function buildLegend(legendId, filteredNodes) {
 }
 
 // ============================================================
-// TABS
+// INIT
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", function() {
-  // Populate header
   document.getElementById("lastUpdateSpan").textContent =
     "Atualizado: " + (D.lastUpdate || "-");
 
-  // Populate filters
   var selGrupo = document.getElementById("filtroGrupo");
   Object.keys(D.grupos).forEach(function(g) {
     var o = document.createElement("option");
@@ -509,7 +516,6 @@ document.addEventListener("DOMContentLoaded", function() {
     selSemana.appendChild(o);
   });
 
-  // Filter events
   selGrupo.addEventListener("change", function() {
     document.getElementById("filtroNode").value = "todos";
     renderAll();
@@ -519,7 +525,6 @@ document.addEventListener("DOMContentLoaded", function() {
     renderAll();
   });
   selSemana.addEventListener("change", renderAll);
-  document.getElementById("filtroMetrica").addEventListener("change", renderRanking);
 
   // Tab clicks
   document.getElementById("tabBar").addEventListener("click", function(e) {
@@ -568,7 +573,6 @@ function renderResumo() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
 
-  // KPI cards (aggregated)
   var recvVals=[], stowVals=[], depVals=[], pppVals=[];
   filtered.forEach(function(nd) {
     var d = getNodeData(nd, sem);
@@ -599,7 +603,6 @@ function renderResumo() {
     kpiCard("Departure %", avgDep, 99.5, "%") +
     kpiCard("PPP Medio", avgPpp, 175, "");
 
-  // Table
   var th = document.getElementById("resumoThead");
   var tb = document.getElementById("resumoTbody");
   th.innerHTML = '<tr><th>Node</th><th>Grupo</th><th>Tipo</th>'
@@ -643,7 +646,6 @@ function renderPPP() {
     function(nd, s) { var d = getNodeData(nd, s); return d ? d.ppp : null; },
     175, "Meta 175", false);
 
-  // Table
   var th = document.getElementById("pppThead");
   var tb = document.getElementById("pppTbody");
   var semCols = semsToShow.slice().reverse();
@@ -674,7 +676,6 @@ function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target
   buildLegend(legendId, filtered);
   renderLineChart(chartId, filtered, semsToShow, getVal, target, metaLabel, isPercent);
 
-  // KPI cards for current week
   var grid = document.getElementById(kpiGridId);
   if (!grid) return;
   var ncols = Math.min(filtered.length, 4);
@@ -684,7 +685,6 @@ function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target
     var cfg = D.nodes[nd];
     var d1 = (tabId==="stow" && cfg&&cfg.d1_stow) ? ' <span class="badge-d1">D+1</span>' : "";
     d1 += (tabId==="depart" && cfg&&cfg.d1_dep) ? ' <span class="badge-d1">D+1</span>' : "";
-    var metOk = v !== null && v >= target;
     var cls = v===null ? "" : (v>=target ? "target-met" : v>=target*0.98 ? "" : "target-miss");
     var valCls = v===null ? "" : (v>=target ? "ok" : v>=target*0.98 ? "warn" : "miss");
     return '<div class="kpi-card '+cls+'"><h4>' + nd + d1 + '</h4>'
@@ -695,7 +695,6 @@ function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target
 
 // ============================================================
 // OTD / CPT RENDERER
-// *** FIX 1 applied: fmtPct handles both decimal (<=1) and percent (>1) formats ***
 // ============================================================
 
 function renderOTDCPT(tabId, title, chartId, legendId, kpiGridId, getVal, target) {
@@ -714,7 +713,6 @@ function renderOTDCPT(tabId, title, chartId, legendId, kpiGridId, getVal, target
   grid.style.gridTemplateColumns = "repeat(" + ncols + ",1fr)";
   grid.innerHTML = filtered.map(function(nd) {
     var v = getVal(nd, sem);
-    // v is already normalized (percent form via normPct)
     var cls = v===null ? "" : (v>=target ? "target-met" : v>=target*0.98 ? "" : "target-miss");
     var valCls = v===null ? "" : (v>=target ? "ok" : v>=target*0.98 ? "warn" : "miss");
     return '<div class="kpi-card '+cls+'"><h4>' + nd + '</h4>'
@@ -753,13 +751,11 @@ function renderTendencia() {
       function(nd,s){ var d=getNodeData(nd,s); return d?normPct(d.receive):null; },
       98.5, "98.5%", true);
   } else {
-    // Daily mode
     if (!D.daily || Object.keys(D.daily).length === 0) {
       container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
-        + 'Dados diarios ainda nao disponíveis.</div>';
+        + 'Dados diarios ainda nao disponiveis.<br><small>Fonte: shipment_level.csv</small></div>';
       return;
     }
-    // Collect dates for filtered nodes
     var datesSet = {};
     Object.keys(D.daily).forEach(function(k) {
       var parts = k.split("|");
@@ -781,81 +777,86 @@ function renderTendencia() {
 }
 
 // ============================================================
-// RANKING WITH ADAPTIVE PODIUM
-// *** FIX 2: Podium adapts to number of filtered nodes:
-//     1 node = only gold centered, 2 nodes = gold + silver, 3+ = normal podium ***
+// RANKING — Score + Tiebreakers: Stow > Recv > Dep > Vol > PPP
 // ============================================================
 
 function renderRanking() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
-  var metrica = document.getElementById("filtroMetrica").value;
 
   var scores = filtered.map(function(nd) {
     var d  = getNodeData(nd, sem);
     var ex = getExtras(nd, sem);
     if (!d) return null;
-    var rv = normPct(d.receive)  || 0;
-    var sv = normPct(d.stow)     || 0;
-    var dv = normPct(d.depart)   || 0;
-    var ov = ex ? normPct(ex.otd) || 0 : null;
-    var cv = ex ? normPct(ex.cpt) || 0 : null;
-    var components = [rv - 98.5, sv - 99.5, dv - 99.5];
-    if (ov !== null) components.push(ov - 100);
-    if (cv !== null) components.push(cv - 100);
-    var score = components.reduce(function(a,b){return a+b;},0) / components.length;
-    var sortVal = metrica === "ppp" ? (d.ppp || 0)
-               : metrica === "volume" ? (d.volume || 0)
-               : (normPct(d[metrica]) || 0);
+    var rv = normPct(d.receive) || 0;
+    var sv = normPct(d.stow)   || 0;
+    var dv = normPct(d.depart) || 0;
+    var ov = ex ? normPct(ex.otd) : null;
+    var cv = ex ? normPct(ex.cpt) : null;
+
+    var rd = rv - 98.5;
+    var sd = sv - 99.5;
+    var dd = dv - 99.5;
+    var od = ov !== null ? ov - 100 : null;
+    var cd = cv !== null ? cv - 100 : null;
+
+    var components = [rd, sd, dd];
+    if (od !== null) components.push(od);
+    if (cd !== null) components.push(cd);
+    var score = components.reduce(function(a, b) { return a + b; }, 0) / components.length;
+
     return {
-      node: nd, score: score, sortVal: sortVal,
-      ppp: d.ppp, vol: d.volume, grupo: D.nodes[nd] ? D.nodes[nd].grupo : "",
-      rd: rv-98.5, sd: sv-99.5, dd: dv-99.5,
-      od: ov!==null?ov-100:null, cd: cv!==null?cv-100:null
+      node: nd, score: score,
+      ppp: d.ppp || 0, vol: d.volume || 0,
+      grupo: D.nodes[nd] ? D.nodes[nd].grupo : "",
+      rd: rd, sd: sd, dd: dd, od: od, cd: cd
     };
-  }).filter(function(x){ return x !== null; });
+  }).filter(function(x) { return x !== null; });
 
-  scores.sort(function(a,b) { return b.score - a.score; });
+  // Sort: score desc, tiebreakers: Stow > Recv > Dep > Volume > PPP
+  scores.sort(function(a, b) {
+    if (Math.abs(b.score - a.score) > 0.001) return b.score - a.score;
+    if (Math.abs(b.sd - a.sd) > 0.001) return b.sd - a.sd;
+    if (Math.abs(b.rd - a.rd) > 0.001) return b.rd - a.rd;
+    if (Math.abs(b.dd - a.dd) > 0.001) return b.dd - a.dd;
+    if (b.vol !== a.vol) return b.vol - a.vol;
+    return b.ppp - a.ppp;
+  });
 
-  // *** FIX 2: Build adaptive podium ***
+  // Adaptive podium
   var container = document.getElementById("podiumContainer");
   container.innerHTML = "";
-
-  var medals = ["🥇","🥈","🥉"];
-  var podiumClasses = ["podium-1st","podium-2nd","podium-3rd"];
+  var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
 
   if (scores.length === 0) {
-    container.innerHTML = '<p style="color:#64748b">Sem dados para o periodo selecionado.</p>';
+    container.innerHTML = '<p style="color:#64748b;padding:40px">Sem dados para o periodo selecionado.</p>';
   } else if (scores.length === 1) {
-    // 1 node: only gold, centered
     container.style.justifyContent = "center";
-    var item = document.createElement("div");
-    item.className = "podium-item podium-1st";
-    item.innerHTML = buildPodiumBlock(scores[0], medals[0]);
-    container.appendChild(item);
+    var item1 = document.createElement("div");
+    item1.className = "podium-item podium-1st";
+    item1.innerHTML = buildPodiumBlock(scores[0], medals[0]);
+    container.appendChild(item1);
   } else if (scores.length === 2) {
-    // 2 nodes: gold + silver
     container.style.justifyContent = "center";
-    var order = [scores[1], scores[0]]; // silver on left, gold on right
-    var classes = ["podium-2nd","podium-1st"];
-    var meds    = [medals[1], medals[0]];
-    order.forEach(function(s, i) {
-      var item = document.createElement("div");
-      item.className = "podium-item " + classes[i];
-      item.innerHTML = buildPodiumBlock(s, meds[i]);
-      container.appendChild(item);
+    var order2 = [scores[1], scores[0]];
+    var classes2 = ["podium-2nd", "podium-1st"];
+    var meds2 = [medals[1], medals[0]];
+    order2.forEach(function(s, i) {
+      var item2 = document.createElement("div");
+      item2.className = "podium-item " + classes2[i];
+      item2.innerHTML = buildPodiumBlock(s, meds2[i]);
+      container.appendChild(item2);
     });
   } else {
-    // 3+ nodes: normal podium (2nd, 1st, 3rd)
     container.style.justifyContent = "";
     var podOrder = [scores[1], scores[0], scores[2]];
-    var podClasses = ["podium-2nd","podium-1st","podium-3rd"];
-    var podMedals  = [medals[1], medals[0], medals[2]];
+    var podClasses = ["podium-2nd", "podium-1st", "podium-3rd"];
+    var podMedals = [medals[1], medals[0], medals[2]];
     podOrder.forEach(function(s, i) {
-      var item = document.createElement("div");
-      item.className = "podium-item " + podClasses[i];
-      item.innerHTML = buildPodiumBlock(s, podMedals[i]);
-      container.appendChild(item);
+      var item3 = document.createElement("div");
+      item3.className = "podium-item " + podClasses[i];
+      item3.innerHTML = buildPodiumBlock(s, podMedals[i]);
+      container.appendChild(item3);
     });
   }
 
@@ -863,24 +864,24 @@ function renderRanking() {
   var tbody = document.getElementById("rankTable");
   tbody.innerHTML = scores.map(function(s, i) {
     function fmtGap(v) {
-      if (v===null||v===undefined) return "-";
-      return (v>=0?"+":"") + v.toFixed(2);
+      if (v === null || v === undefined) return "-";
+      return (v >= 0 ? "+" : "") + v.toFixed(2);
     }
     var rdCls = s.rd >= 0 ? "ok" : "miss";
     var sdCls = s.sd >= 0 ? "ok" : "miss";
     var ddCls = s.dd >= 0 ? "ok" : "miss";
-    var odCls = s.od!==null ? (s.od>=0?"ok":"miss") : "";
-    var cdCls = s.cd!==null ? (s.cd>=0?"ok":"miss") : "";
+    var odCls = s.od !== null ? (s.od >= 0 ? "ok" : "miss") : "";
+    var cdCls = s.cd !== null ? (s.cd >= 0 ? "ok" : "miss") : "";
     return '<tr>'
-      + '<td><b>' + (i+1) + '</b></td>'
+      + '<td><b>' + (i + 1) + '</b></td>'
       + '<td><span class="node-tag" style="background:' + nodeColor(s.node) + '22;color:' + nodeColor(s.node) + '">' + s.node + '</span></td>'
       + '<td>' + s.grupo + '</td>'
-      + '<td class="'+rdCls+'">' + fmtGap(s.rd) + '</td>'
-      + '<td class="'+sdCls+'">' + fmtGap(s.sd) + '</td>'
-      + '<td class="'+ddCls+'">' + fmtGap(s.dd) + '</td>'
-      + '<td class="'+odCls+'">' + fmtGap(s.od) + '</td>'
-      + '<td class="'+cdCls+'">' + fmtGap(s.cd) + '</td>'
-      + '<td><b>' + (s.score>=0?"+":"") + s.score.toFixed(2) + '</b></td>'
+      + '<td class="' + rdCls + '">' + fmtGap(s.rd) + '</td>'
+      + '<td class="' + sdCls + '">' + fmtGap(s.sd) + '</td>'
+      + '<td class="' + ddCls + '">' + fmtGap(s.dd) + '</td>'
+      + '<td class="' + odCls + '">' + fmtGap(s.od) + '</td>'
+      + '<td class="' + cdCls + '">' + fmtGap(s.cd) + '</td>'
+      + '<td><b>' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + ' pp</b></td>'
       + '</tr>';
   }).join("");
 }
@@ -922,3 +923,4 @@ function launchConfetti() {
 </script>
 </body>
 </html>
+
