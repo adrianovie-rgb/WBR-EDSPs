@@ -1,35 +1,39 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WBR-EDSPs</title>
+<title>WBR - EDSPs</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b}
 .container{max-width:1600px;margin:0 auto;padding:20px 40px}
-header{background:linear-gradient(135deg,#1e293b 0%,#334155 100%);color:white;padding:24px 40px;
-  border-radius:12px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center}
+header{background:linear-gradient(135deg,#1e293b 0%,#334155 100%);color:white;
+       padding:24px 40px;border-radius:12px;margin-bottom:24px;
+       display:flex;justify-content:space-between;align-items:center}
 header h1{font-size:1.6rem}
 header .subtitle{opacity:.8;font-size:.95rem;margin-top:4px}
 .update-info{display:flex;align-items:center;gap:12px}
 .update-info span{font-size:.85rem;opacity:.8}
-.filters-bar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 24px;
-  margin-bottom:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;
-  box-shadow:0 1px 3px rgba(0,0,0,.06)}
+#btnUpdate{background:#3b82f6;border:none;color:white;padding:10px 20px;
+           border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600}
+#btnUpdate:hover{background:#2563eb}
+.filters-bar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;
+             padding:14px 24px;margin-bottom:16px;
+             display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+             box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .filter-group{display:flex;align-items:center;gap:8px}
-.filter-group label{font-size:.8rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
-.filter-group select{padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:.85rem;
-  background:#fff;cursor:pointer;color:#1e293b}
+.filter-group label{font-size:.8rem;font-weight:600;color:#64748b;text-transform:uppercase}
+.filter-group select{padding:6px 12px;border:1px solid #e2e8f0;border-radius:8px;
+                     font-size:.85rem;background:#fff;cursor:pointer;color:#1e293b}
 .filter-group select:focus{outline:none;border-color:#3b82f6}
 .tabs{display:flex;gap:4px;margin-bottom:24px;flex-wrap:wrap}
 .tab{padding:12px 22px;border:none;background:#e2e8f0;border-radius:8px 8px 0 0;
-  cursor:pointer;font-size:.9rem;font-weight:500;transition:all .2s}
+     cursor:pointer;font-size:.9rem;font-weight:500;transition:all .2s}
 .tab.active{background:#1e293b;color:white}
 .tab:hover:not(.active){background:#cbd5e1}
-.panel{display:none;background:white;border-radius:0 12px 12px 12px;padding:32px 40px;
-  box-shadow:0 1px 3px rgba(0,0,0,.1);min-height:450px}
+.panel{display:none;background:white;border-radius:0 12px 12px 12px;
+       padding:32px 40px;box-shadow:0 1px 3px rgba(0,0,0,.1);min-height:450px}
 .panel.active{display:block}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:28px}
 .kpi-card{background:#f8fafc;border-radius:10px;padding:20px;border-left:4px solid #3b82f6}
@@ -38,81 +42,110 @@ header .subtitle{opacity:.8;font-size:.95rem;margin-top:4px}
 .kpi-card .detail{font-size:.8rem;color:#64748b;margin-top:6px}
 .target-met{border-left-color:#10b981}
 .target-miss{border-left-color:#ef4444}
+.target-warn{border-left-color:#f59e0b}
 table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.9rem}
-th{background:#f1f5f9;padding:12px 16px;text-align:left;font-weight:600;border-bottom:2px solid #e2e8f0}
+th{background:#f1f5f9;padding:12px 16px;text-align:left;
+   font-weight:600;border-bottom:2px solid #e2e8f0}
 td{padding:10px 16px;border-bottom:1px solid #f1f5f9}
 tr:hover{background:#f8fafc}
 .miss{color:#ef4444;font-weight:600}
 .ok{color:#10b981;font-weight:600}
 .warn{color:#f59e0b;font-weight:600}
-.section-title{font-size:1.2rem;font-weight:700;margin-bottom:20px;padding-bottom:10px;border-bottom:2px solid #e2e8f0}
-.node-tag{display:inline-block;padding:3px 10px;border-radius:4px;font-size:.8rem;font-weight:600;color:#fff}
-.badge-d1{display:inline-block;padding:2px 7px;background:#fef3c7;color:#92400e;
-  border-radius:4px;font-size:.7rem;font-weight:700;margin-left:4px}
-.podium-container{display:flex;justify-content:center;align-items:flex-end;gap:40px;margin:50px 0}
-.podium-item{text-align:center;animation:podiumRise .8s ease forwards;opacity:0;transform:translateY(50px)}
+.section-title{font-size:1.2rem;font-weight:700;margin-bottom:20px;
+               padding-bottom:10px;border-bottom:2px solid #e2e8f0}
+.node-tag{display:inline-block;padding:3px 10px;border-radius:4px;
+          font-size:.8rem;font-weight:600;margin-right:4px}
+.badge-d1{display:inline-block;font-size:.7rem;background:#fff3cd;color:#92400e;
+          padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+/* Podium */  
+.podium-container{display:flex;justify-content:center;align-items:flex-end;
+                  gap:40px;margin:50px 0}
+.podium-item{text-align:center;animation:podiumRise .8s ease forwards;
+             opacity:0;transform:translateY(50px)}
 .podium-item:nth-child(1){animation-delay:.5s}
 .podium-item:nth-child(2){animation-delay:.2s}
 .podium-item:nth-child(3){animation-delay:.8s}
 @keyframes podiumRise{to{opacity:1;transform:translateY(0)}}
 .podium-block{border-radius:8px 8px 0 0;display:flex;flex-direction:column;
-  justify-content:center;align-items:center;padding:24px;color:white;font-weight:700}
-.podium-1st .podium-block{background:linear-gradient(135deg,#f59e0b,#d97706);height:200px;width:200px}
-.podium-2nd .podium-block{background:linear-gradient(135deg,#94a3b8,#64748b);height:160px;width:170px}
-.podium-3rd .podium-block{background:linear-gradient(135deg,#d97706,#92400e);height:130px;width:170px}
+              justify-content:center;align-items:center;padding:24px;
+              color:white;font-weight:700}
+.podium-1st .podium-block{background:linear-gradient(135deg,#f59e0b,#d97706);
+                           height:200px;width:200px}
+.podium-2nd .podium-block{background:linear-gradient(135deg,#94a3b8,#64748b);
+                           height:160px;width:170px}
+.podium-3rd .podium-block{background:linear-gradient(135deg,#d97706,#92400e);
+                           height:130px;width:170px}
 .podium-medal{font-size:3rem;margin-bottom:10px}
 .podium-node{font-size:1.5rem;font-weight:800}
 .podium-score{font-size:1rem;opacity:.9;margin-top:6px}
 .podium-ppp{font-size:.85rem;opacity:.8;margin-top:4px}
-.confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999}
-.confetti-piece{position:absolute;width:10px;height:10px;top:-10px;animation:confettiFall 3s linear forwards}
+/* Confetti */  
+.confetti{position:fixed;top:0;left:0;width:100%;height:100%;
+          pointer-events:none;z-index:9999}
+.confetti-piece{position:absolute;width:10px;height:10px;top:-10px;
+                animation:confettiFall 3s linear forwards}
 @keyframes confettiFall{
   0%{transform:translateY(-10px) rotate(0deg);opacity:1}
   100%{transform:translateY(100vh) rotate(720deg);opacity:0}
 }
-.chart-container{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:28px;margin:24px 0}
+/* Charts */  
+.chart-container{background:white;border:1px solid #e2e8f0;border-radius:12px;
+                 padding:28px;margin:24px 0}
 .chart-container h3{font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:4px}
 .chart-container .chart-meta{font-size:.85rem;color:#64748b;margin-bottom:16px}
-.chart-container svg{width:100%;overflow:visible}
+.chart-container svg{width:100%;height:300px}
+/* Legend */  
+.legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.8rem}
+.legend-dot{width:12px;height:12px;border-radius:3px}
+/* Success msg */  
 .success-msg{background:#dcfce7;border:1px solid #86efac;border-radius:8px;
-  padding:20px;text-align:center;margin:20px 0}
+             padding:20px;text-align:center;margin:20px 0}
 .success-msg span{font-size:1.3rem;font-weight:700;color:#166534}
-.d1-note{background:#fef9c3;border:1px solid #fde047;border-radius:8px;
-  padding:12px 16px;font-size:.85rem;color:#713f12;margin-top:12px}
-.table-responsive{overflow-x:auto}
-@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.container{padding:16px 20px}}
-@media(max-width:768px){.kpi-grid{grid-template-columns:1fr}.podium-container{flex-direction:column;align-items:center}}
+/* Trend mode toggle */  
+.trend-toggle{display:flex;gap:4px;margin-bottom:16px}
+.trend-toggle button{padding:6px 14px;border:1px solid #e2e8f0;background:#fff;
+                     border-radius:6px;cursor:pointer;font-size:.8rem;transition:all .2s}
+.trend-toggle button.active{background:#1e293b;color:white;border-color:#1e293b}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:1fr}
+  .podium-container{flex-direction:column;align-items:center}}
 </style>
 </head>
 <body>
 <div class="container">
-
 <header>
   <div>
-    <h1 id="headerTitle">WBR-EDSPs</h1>
-    <div class="subtitle" id="headerSubtitle">Dashboard de Performance | DF-SUL EDSPs</div>
+    <h1 id="pageTitle">WBR - EDSPs</h1>
+    <div class="subtitle" id="pageSubtitle">DF-SUL Performance Dashboard</div>
   </div>
   <div class="update-info">
-    <span id="lastUpdateSpan">Aguardando dados...</span>
+    <span id="lastUpdateSpan">Carregando...</span>
   </div>
 </header>
 
 <div class="filters-bar">
   <div class="filter-group">
     <label>Grupo:</label>
-    <select id="filtroGrupo">
-      <option value="todos">Todos os Grupos</option>
-    </select>
+    <select id="filtroGrupo"><option value="todos">Todos</option></select>
   </div>
   <div class="filter-group">
     <label>Node:</label>
-    <select id="filtroNode">
-      <option value="todos">Todos os Nodes</option>
-    </select>
+    <select id="filtroNode"><option value="todos">Todos</option></select>
   </div>
   <div class="filter-group">
     <label>Semana:</label>
     <select id="filtroSemana"></select>
+  </div>
+  <div class="filter-group">
+    <label>Metrica (Ranking):</label>
+    <select id="filtroMetrica">
+      <option value="ppp">PPP</option>
+      <option value="receive">Receive %</option>
+      <option value="stow">Stow %</option>
+      <option value="depart">Depart %</option>
+      <option value="volume">Volume</option>
+    </select>
   </div>
 </div>
 
@@ -124,973 +157,766 @@ tr:hover{background:#f8fafc}
   <button class="tab" data-tab="departure">Departure</button>
   <button class="tab" data-tab="otd">OTD</button>
   <button class="tab" data-tab="cpt">CPT</button>
-  <button class="tab" data-tab="tendencia">Tend&ecirc;ncia</button>
+  <button class="tab" data-tab="tendencia">Tendencia</button>
   <button class="tab" data-tab="ranking">Ranking</button>
 </div>
 
-<!-- ===== RESUMO ===== -->
 <div class="panel active" id="panel-resumo">
-  <div class="section-title" id="resumoTitle">Resumo</div>
-  <div class="kpi-grid" id="resumoKPIs"></div>
-  <div class="table-responsive">
-    <table id="resumoTable">
-      <thead id="resumoThead"></thead>
-      <tbody id="resumoTbody"></tbody>
-    </table>
-  </div>
-  <div class="d1-note">
-    <strong>Regras D+1 aplicadas:</strong>
-    Stow de <strong>ESE8</strong> (origens: EJO8, EME8, EUM8) e <strong>ECB8</strong>
-    (origens: EVE8, EOZ8). Departure de <strong>EUM8</strong> e <strong>EME8</strong>.
-    Valores exibidos j&aacute; p&oacute;s-corre&ccedil;&atilde;o.
-  </div>
+  <div class="section-title">Resumo de Performance</div>
+  <div class="kpi-grid" id="resumoKpiGrid"></div>
+  <table><thead id="resumoThead"></thead><tbody id="resumoTbody"></tbody></table>
 </div>
 
-<!-- ===== PPP ===== -->
 <div class="panel" id="panel-ppp">
-  <div class="section-title" id="pppTitle">Packages Per Pallet</div>
-  <div class="table-responsive">
-    <table id="pppTable">
-      <thead id="pppThead"></thead>
-      <tbody id="pppTbody"></tbody>
-    </table>
-  </div>
+  <div class="section-title">Packages Per Pallet (PPP)</div>
   <div class="chart-container">
-    <h3>PPP por Node (Rolling)</h3>
-    <div class="chart-meta" id="pppChartMeta">Meta: &gt;= 175</div>
-    <svg id="pppSvg" viewBox="0 0 960 320" preserveAspectRatio="xMidYMid meet"></svg>
+    <h3>PPP por Node</h3>
+    <div class="chart-meta">Meta: >= 175 | Semanas selecionadas</div>
+    <div class="legend" id="pppLegend"></div>
+    <svg id="pppChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
+  <table><thead id="pppThead"></thead><tbody id="pppTbody"></tbody></table>
 </div>
 
-<!-- ===== RECEIVE ===== -->
 <div class="panel" id="panel-receive">
-  <div class="section-title" id="receiveTitle">Receive Success</div>
-  <div class="kpi-grid" id="receiveKPIs"></div>
+  <div class="section-title">Receive Success %</div>
+  <div class="kpi-grid" id="receiveKpiGrid"></div>
   <div class="chart-container">
-    <h3>Receive Success % por Node (Rolling)</h3>
-    <div class="chart-meta">Meta: &gt;= 98.5%</div>
-    <svg id="receiveSvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
-  </div>
-  <div class="table-responsive">
-    <table id="receiveTable">
-      <thead id="receiveThead"></thead>
-      <tbody id="receiveTbody"></tbody>
-    </table>
+    <h3>Receive % por Node</h3>
+    <div class="chart-meta">Meta: >= 98.5% | Incluindo D+1 aplicado</div>
+    <div class="legend" id="recvLegend"></div>
+    <svg id="recvChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
-<!-- ===== STOW ===== -->
 <div class="panel" id="panel-stow">
-  <div class="section-title" id="stowTitle">Stow Success</div>
-  <div class="kpi-grid" id="stowKPIs"></div>
+  <div class="section-title">Stow Success % (D+1 aplicado: ESE8, ECB8)</div>
+  <div class="kpi-grid" id="stowKpiGrid"></div>
   <div class="chart-container">
-    <h3>Stow Success % por Node (Rolling)</h3>
-    <div class="chart-meta">Meta: &gt;= 99.5% | Com regra D+1 para ESE8 e ECB8</div>
-    <svg id="stowSvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
-  </div>
-  <div class="table-responsive">
-    <table id="stowTable">
-      <thead id="stowThead"></thead>
-      <tbody id="stowTbody"></tbody>
-    </table>
-  </div>
-  <div class="d1-note">
-    <strong>D+1 Stow:</strong> ESE8 recebe D+1 de EJO8, EME8, EUM8.
-    ECB8 recebe D+1 de EVE8 e EOZ8. Miss s&oacute; conta se Event201 n&atilde;o chegou
-    at&eacute; o final do pr&oacute;ximo dia &uacute;til ap&oacute;s Event103 na origem.
+    <h3>Stow % por Node</h3>
+    <div class="chart-meta">Meta: >= 99.5% | Regra D+1: origens EJO8/EME8/EUM8->ESE8, EVE8/EOZ8->ECB8</div>
+    <div class="legend" id="stowLegend"></div>
+    <svg id="stowChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
-<!-- ===== DEPARTURE ===== -->
 <div class="panel" id="panel-departure">
-  <div class="section-title" id="departureTitle">Departure Success</div>
-  <div class="kpi-grid" id="departureKPIs"></div>
+  <div class="section-title">Departure Success % (D+1 aplicado: EUM8, EME8)</div>
+  <div class="kpi-grid" id="depKpiGrid"></div>
   <div class="chart-container">
-    <h3>Departure Success % por Node (Rolling)</h3>
-    <div class="chart-meta">Meta: &gt;= 99.5% | D+1 aplicado em EUM8 e EME8</div>
-    <svg id="departureSvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
-  </div>
-  <div class="table-responsive">
-    <table id="departureTable">
-      <thead id="departureThead"></thead>
-      <tbody id="departureTbody"></tbody>
-    </table>
-  </div>
-  <div class="d1-note">
-    <strong>D+1 Departure:</strong> EUM8 e EME8 &mdash; miss s&oacute; confirmada se Event202
-    n&atilde;o chegou at&eacute; o pr&oacute;ximo dia &uacute;til ap&oacute;s Event201.
+    <h3>Departure % por Node</h3>
+    <div class="chart-meta">Meta: >= 99.5% | Regra D+1: EUM8 e EME8</div>
+    <div class="legend" id="depLegend"></div>
+    <svg id="depChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
-<!-- ===== OTD ===== -->
 <div class="panel" id="panel-otd">
-  <div class="section-title" id="otdTitle">OTD &mdash; On Time Delivery</div>
-  <div class="kpi-grid" id="otdKPIs"></div>
+  <div class="section-title">OTD - On Time Delivery</div>
+  <div class="kpi-grid" id="otdKpiGrid"></div>
   <div class="chart-container">
-    <h3>OTD % por Node (Rolling)</h3>
-    <div class="chart-meta" id="otdChartMeta">Meta: 100%</div>
-    <svg id="otdSvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <h3>OTD % por Node</h3>
+    <div class="chart-meta">Meta: 100%</div>
+    <div class="legend" id="otdLegend"></div>
+    <svg id="otdChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
-  <div id="otdSuccessMsg"></div>
 </div>
 
-<!-- ===== CPT ===== -->
 <div class="panel" id="panel-cpt">
-  <div class="section-title" id="cptTitle">CPT &mdash; Critical Pull Time</div>
-  <div class="kpi-grid" id="cptKPIs"></div>
+  <div class="section-title">CPT - Critical Pull Time</div>
+  <div class="kpi-grid" id="cptKpiGrid"></div>
   <div class="chart-container">
-    <h3>CPT % por Node (Rolling)</h3>
-    <div class="chart-meta" id="cptChartMeta">Meta: 100%</div>
-    <svg id="cptSvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <h3>CPT % por Node</h3>
+    <div class="chart-meta">Meta: 100%</div>
+    <div class="legend" id="cptLegend"></div>
+    <svg id="cptChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
-  <div id="cptSuccessMsg"></div>
 </div>
 
-<!-- ===== TENDENCIA ===== -->
 <div class="panel" id="panel-tendencia">
-  <div class="section-title">Tend&ecirc;ncia &mdash; &Uacute;ltimas Semanas</div>
-  <div style="display:flex;gap:8px;margin-bottom:20px">
-    <button id="btnSemanal" class="tab active" onclick="setTrendMode('semanal')"
-      style="border-radius:6px;padding:8px 18px">Semanal</button>
-    <button id="btnDiario" class="tab" onclick="setTrendMode('diario')"
-      style="border-radius:6px;padding:8px 18px">Di&aacute;rio</button>
+  <div class="section-title">Tendencia</div>
+  <div class="trend-toggle">
+    <button class="active" id="btnSemanal" onclick="setTrendMode('semanal')">Ultimas 6 Semanas</button>
+    <button id="btnDiario" onclick="setTrendMode('diario')">Ultimos 6 Dias</button>
   </div>
   <div id="tendenciaContent"></div>
 </div>
 
-<!-- ===== RANKING ===== -->
 <div class="panel" id="panel-ranking">
-  <div class="section-title" id="rankingTitle">Ranking de Performance</div>
-  <p style="font-size:.9rem;color:#64748b;margin-bottom:12px">
-    Score = m&eacute;dia(Recv-98.5, Stow-99.5, Dep-99.5, OTD-100, CPT-100)/5.
-    Desempate: Stow &gt; Recv &gt; Dep &gt; Volume &gt; PPP.
-  </p>
+  <div class="section-title">Ranking - Performance Consolidada</div>
   <div class="podium-container" id="podiumContainer"></div>
   <div style="text-align:center;margin-top:24px">
-    <table style="margin:0 auto;max-width:900px">
-      <thead>
-        <tr>
-          <th>#</th><th>Node</th><th>Grupo</th>
-          <th>Recv</th><th>Stow</th><th>Dep</th>
-          <th>OTD</th><th>CPT</th><th>PPP</th><th>Score</th>
-        </tr>
-      </thead>
+    <table style="margin:0 auto;max-width:800px">
+      <thead><tr>
+        <th>#</th><th>Node</th><th>Grupo</th>
+        <th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>
+        <th>OTD Gap</th><th>CPT Gap</th><th>Score</th>
+      </tr></thead>
       <tbody id="rankTable"></tbody>
     </table>
   </div>
 </div>
-
-</div><!-- /container -->
+</div>
 
 <script src="data.js"></script>
 <script>
 (function(){
-
-/* ================================================================== */
-/* GUARD: aguarda data.js                                              */
-/* ================================================================== */
-if(typeof D === 'undefined'){
-  document.querySelector('header h1').textContent = 'WBR-EDSPs — aguardando data.js';
-  document.querySelector('.subtitle').textContent = 'Cole o data.js gerado pelo Apps Script no mesmo repositório.';
-  return;
-}
-
-/* ================================================================== */
-/* CONSTANTS & HELPERS                                                 */
-/* ================================================================== */
-var METAS = { recv:0.985, stow:0.995, dep:0.995, otd:100, cpt:100, ppp:175 };
-
-/* ---- FIX 1: OTD/CPT percentage handling ----
- * wbr_extras armazena OTD/CPT já em % (ex: 98.334, 100).
- * Não multiplicar por 100. Detectar automático: se valor > 1 está em %;
- * se valor <= 1.0, converter multiplicando por 100.
- */
-function normalizePercent(v){
-  if(v === null || v === undefined || v === '') return null;
-  var n = Number(v);
-  if(isNaN(n)) return null;
-  /* Se o valor já está em % (> 1), retornar direto; senão multiplicar */
-  return n > 1 ? n : n * 100;
-}
-
-/* Node colors -- consistent palette across all charts */
+// ============================================================
+// CONFIG & COLORS
+// ============================================================
 var NODE_COLORS = {
-  'ECB8':'#7c3aed','ESE8':'#0284c7','ESB8':'#0891b2','ERS8':'#059669',
-  'EGO8':'#16a34a','EXS9':'#65a30d','EIJ8':'#d97706','EUM8':'#ea580c',
-  'EVE8':'#dc2626','EOZ8':'#db2777','EMR8':'#9333ea','ELO8':'#6366f1',
-  'EJO8':'#2563eb','EME8':'#0e7490'
+  ECB8:"#e74c3c", ESE8:"#3498db", ESB8:"#2ecc71", ERS8:"#9b59b6",
+  EGO8:"#1abc9c", EXS9:"#34495e", EIJ8:"#e67e22", EUM8:"#f39c12",
+  EVE8:"#16a085", EOZ8:"#8e44ad", EMR8:"#c0392b", ELO8:"#27ae60",
+  EJO8:"#2980b9", EME8:"#d35400"
 };
+var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 };
 
-/* D+1 rules for badge display */
-var D1_STOW_NODES = ['ESE8','ECB8'];
-var D1_DEP_NODES  = ['EUM8','EME8'];
+// ============================================================
+// HELPERS
+// ============================================================
 
-var nodes    = D.nodes    || {};
-var grupos   = D.grupos   || {};
-var semanas  = D.semanas  || [];
-var extras   = D.extras   || {};
-var daily    = D.daily    || {};
-var shipments = D.shipments || {};
-var allNodeKeys = Object.keys(nodes).sort();
-var trendMode = 'semanal';
-
-/* DOM refs */
-var selGrupo  = document.getElementById('filtroGrupo');
-var selNode   = document.getElementById('filtroNode');
-var selSemana = document.getElementById('filtroSemana');
-
-/* ================================================================== */
-/* INIT -- populate filters                                            */
-/* ================================================================== */
-document.getElementById('lastUpdateSpan').textContent =
-  'Atualizado: ' + (D.lastUpdate || '-');
-
-/* Semana -- most-recent first */
-var semsRev = semanas.slice().reverse();
-semsRev.forEach(function(s){
-  var o = document.createElement('option');
-  o.value = s; o.textContent = s;
-  selSemana.appendChild(o);
-});
-
-/* Grupos */
-Object.keys(grupos).sort().forEach(function(g){
-  var o = document.createElement('option');
-  o.value = g; o.textContent = g;
-  selGrupo.appendChild(o);
-});
-
-/* Nodes */
-allNodeKeys.forEach(function(nk){
-  var o = document.createElement('option');
-  o.value = nk; o.textContent = nk;
-  selNode.appendChild(o);
-});
-
-/* ================================================================== */
-/* FILTER HELPERS                                                      */
-/* ================================================================== */
-function getFilteredNodes(){
-  var grupo = selGrupo.value;
-  var node  = selNode.value;
-  if(node !== 'todos') return [node];
-  if(grupo !== 'todos') return (grupos[grupo] || []).filter(function(n){ return !!nodes[n]; });
-  return allNodeKeys;
-}
-
-function getSem(){ return selSemana.value; }
-
-function getNodeData(nk, sem){
-  if(!nodes[nk] || !nodes[nk].semanas) return null;
-  return nodes[nk].semanas[sem] || null;
-}
-
-function getExtra(nk, sem){
-  if(!extras[nk]) return null;
-  return extras[nk][sem] || null;
-}
-
-/* ---- FIX 1 applied: fmtPctVal handles both % and decimal inputs ---- */
-function fmtPctVal(v){
-  /* v may be decimal (0-1) or already in % (0-100) */
-  if(v === null || v === undefined || v === '') return '-';
+// *** FIX 1: OTD/CPT display - values come as percentages (e.g. 98.334, 100)
+//     Display directly WITHOUT multiplying. Only multiply if value <= 1.0 (decimal format) ***
+function fmtPct(v) {
+  if (v === null || v === undefined) return "-";
   var n = Number(v);
-  if(isNaN(n)) return '-';
+  if (isNaN(n)) return "-";
+  // If value > 1 it is already a percentage (e.g. 98.334 -> display as 98.33%)
   var pct = n > 1 ? n : n * 100;
-  return pct.toFixed(2) + '%';
+  return pct.toFixed(2) + "%";
 }
 
-function fmtPct(v){
-  /* Used for receive/stow/depart which are stored as decimals 0-1 */
-  if(v === null || v === undefined || v === '') return '-';
-  return (Number(v)*100).toFixed(2) + '%';
-}
-
-function fmtNum(v,dec){
-  if(v === null || v === undefined || v === '') return '-';
+function fmtNum(v, dec) {
+  if (v === null || v === undefined) return "-";
   return Number(v).toFixed(dec !== undefined ? dec : 1);
 }
 
-function kpiClass(val, meta, higherBetter){
-  if(val === null || val === undefined) return '';
-  var v = Number(val);
-  if(higherBetter !== false){
-    return v >= meta ? 'ok' : v >= meta * 0.99 ? 'warn' : 'miss';
-  } else {
-    return v <= meta ? 'ok' : v <= meta * 1.01 ? 'warn' : 'miss';
+function cellClass(val, target, higherBetter) {
+  if (val === null || val === undefined) return "";
+  var n = Number(val) > 1 ? Number(val) : Number(val) * 100;
+  if (higherBetter) {
+    if (n >= target) return "ok";
+    if (n >= target * 0.98) return "warn";
+    return "miss";
   }
+  return n <= target ? "ok" : (n <= target * 1.02 ? "warn" : "miss");
 }
 
-function nodeTag(nk){
-  var col = NODE_COLORS[nk] || '#64748b';
-  return '<span class="node-tag" style="background:' + col + '">' + nk + '</span>';
+function nodeColor(nd) { return NODE_COLORS[nd] || "#64748b"; }
+
+function getNodeData(nd, sem) {
+  if (!D.nodes[nd] || !D.nodes[nd].semanas) return null;
+  return D.nodes[nd].semanas[sem] || null;
 }
 
-function d1Badge(nk){
-  var b = '';
-  if(D1_STOW_NODES.indexOf(nk) > -1) b += '<span class="badge-d1">D+1 Stow</span>';
-  if(D1_DEP_NODES.indexOf(nk)  > -1) b += '<span class="badge-d1">D+1 Dep</span>';
-  return b;
+function getExtras(nd, sem) {
+  if (!D.extras || !D.extras[nd]) return null;
+  return D.extras[nd][sem] || null;
 }
 
-/* ================================================================== */
-/* TAB SWITCHING                                                       */
-/* ================================================================== */
-document.getElementById('tabBar').addEventListener('click', function(e){
-  var t = e.target;
-  if(t.tagName !== 'BUTTON' || !t.hasAttribute('data-tab')) return;
-  document.querySelectorAll('.tab[data-tab]').forEach(function(x){ x.classList.remove('active'); });
-  document.querySelectorAll('.panel').forEach(function(x){ x.classList.remove('active'); });
-  t.classList.add('active');
-  var id = 'panel-' + t.getAttribute('data-tab');
-  var p = document.getElementById(id);
-  if(p) p.classList.add('active');
-  renderCurrentTab();
+// Normalize percentage value (handles both decimal <=1 and % >=1)
+function normPct(v) {
+  if (v === null || v === undefined) return null;
+  var n = Number(v);
+  return isNaN(n) ? null : (n > 1 ? n : n * 100);
+}
+
+function getFilteredNodes() {
+  var grupo = document.getElementById("filtroGrupo").value;
+  var node  = document.getElementById("filtroNode").value;
+  if (node !== "todos") return [node];
+  if (grupo !== "todos") return D.grupos[grupo] || [];
+  return Object.keys(D.nodes).sort();
+}
+
+function getNextSemana(sem) {
+  var idx = D.semanas.indexOf(sem);
+  return idx < D.semanas.length - 1 ? D.semanas[idx + 1] : null;
+}
+
+// ============================================================
+// CHART RENDERING WITH PILL-LABELS AND COLLISION DETECTION
+// *** FIX 3: Pill-label style (rounded rect rx=4), each filled with node color,
+//     white bold text inside, JavaScript collision detection that tests positions
+//     above/below/left/right to avoid any overlap between labels ***
+// ============================================================
+
+function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel, isPercent) {
+  var svg = document.getElementById(svgId);
+  if (!svg) return;
+  var PAD_L=70, PAD_R=20, PAD_T=30, PAD_B=55;
+  var W=900, H=300;
+  var chartW = W - PAD_L - PAD_R;
+  var chartH = H - PAD_T - PAD_B;
+
+  // Collect all values to determine Y range
+  var allVals = [];
+  filteredNodes.forEach(function(nd) {
+    semanas.forEach(function(sem) {
+      var v = getData(nd, sem);
+      if (v !== null && v !== undefined) allVals.push(Number(v));
+    });
+  });
+  if (allVals.length === 0) { svg.innerHTML = '<text x="450" y="150" text-anchor="middle" fill="#64748b" font-size="14">Sem dados</text>'; return; }
+
+  var minVal = Math.min.apply(null, allVals);
+  var maxVal = Math.max.apply(null, allVals);
+  if (meta !== null) { minVal = Math.min(minVal, meta * 0.97); maxVal = Math.max(maxVal, meta * 1.01); }
+  var range = maxVal - minVal;
+  if (range === 0) range = 1;
+  var pad = range * 0.1;
+  minVal -= pad; maxVal += pad;
+  range = maxVal - minVal;
+
+  function xPos(sIdx) { return PAD_L + (sIdx / Math.max(semanas.length - 1, 1)) * chartW; }
+  function yPos(v)    { return PAD_T + chartH - ((v - minVal) / range) * chartH; }
+
+  var html = "";
+
+  // Grid lines
+  for (var gi = 0; gi <= 4; gi++) {
+    var gv = minVal + (range / 4) * gi;
+    var gy = yPos(gv);
+    var label = isPercent ? gv.toFixed(1) + "%" : gv.toFixed(0);
+    html += '<line x1="' + PAD_L + '" y1="' + gy + '" x2="' + (W-PAD_R) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="1"/>';
+    html += '<text x="' + (PAD_L-6) + '" y="' + (gy+4) + '" font-size="9" fill="#64748b" text-anchor="end">' + label + '</text>';
+  }
+
+  // X axis labels
+  semanas.forEach(function(sem, si) {
+    var x = xPos(si);
+    html += '<text x="' + x + '" y="' + (H - PAD_B + 16) + '" font-size="10" fill="#64748b" text-anchor="middle">' + sem + '</text>';
+  });
+
+  // Meta line
+  if (meta !== null) {
+    var my = yPos(meta);
+    html += '<line x1="' + PAD_L + '" y1="' + my + '" x2="' + (W-PAD_R) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
+    html += '<text x="' + (W-PAD_R+4) + '" y="' + (my+4) + '" font-size="9" fill="#ef4444">' + metaLabel + '</text>';
+  }
+
+  // Collect label positions for collision detection
+  var placedLabels = [];
+
+  function rectOverlap(a, b) {
+    return !(a.x + a.w < b.x || b.x + b.w < a.x ||
+             a.y + a.h < b.y || b.y + b.h < a.y);
+  }
+
+  function findFreePos(cx, cy, lw, lh) {
+    var offsets = [
+      { dx: -lw/2, dy: -lh - 8 },   // above
+      { dx: -lw/2, dy: 8 },          // below
+      { dx: 6,     dy: -lh/2 },      // right
+      { dx: -lw - 6, dy: -lh/2 },   // left
+      { dx: -lw/2, dy: -lh - 18 },  // above far
+      { dx: -lw/2, dy: 18 },         // below far
+      { dx: 12,    dy: -lh/2 },      // right far
+      { dx: -lw - 12, dy: -lh/2 }   // left far
+    ];
+    for (var oi = 0; oi < offsets.length; oi++) {
+      var rx = cx + offsets[oi].dx;
+      var ry = cy + offsets[oi].dy;
+      var cand = { x: rx, y: ry, w: lw, h: lh };
+      var ok = true;
+      for (var pi = 0; pi < placedLabels.length; pi++) {
+        if (rectOverlap(cand, placedLabels[pi])) { ok = false; break; }
+      }
+      // Keep within chart bounds
+      if (rx < PAD_L - 10 || rx + lw > W - 5) ok = false;
+      if (ry < 5 || ry + lh > H - 5) ok = false;
+      if (ok) return { x: rx, y: ry };
+    }
+    // Fallback: just place above
+    return { x: cx - lw/2, y: cy - lh - 8 };
+  }
+
+  // Draw lines and points
+  filteredNodes.forEach(function(nd) {
+    var color = nodeColor(nd);
+    var points = [];
+    semanas.forEach(function(sem, si) {
+      var v = getData(nd, sem);
+      if (v !== null && v !== undefined) {
+        points.push({ x: xPos(si), y: yPos(Number(v)), v: Number(v) });
+      }
+    });
+    if (points.length === 0) return;
+    // Draw polyline
+    if (points.length > 1) {
+      var pts = points.map(function(p){ return p.x+","+p.y; }).join(" ");
+      html += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5"/>';
+    }
+    // Draw points and pill-labels
+    points.forEach(function(pt) {
+      html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + color + '"/>';
+      var lbl = isPercent ? pt.v.toFixed(2) + "%" : pt.v.toFixed(1);
+      var lw = Math.max(lbl.length * 5.5 + 10, 36);
+      var lh = 16;
+      var pos = findFreePos(pt.x, pt.y, lw, lh);
+      placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
+      // Pill rect filled with node color
+      html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '"/>';
+      // White bold text inside pill
+      html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '"'
+            + ' font-size="9" fill="white" text-anchor="middle" font-weight="700">' + lbl + '</text>';
+    });
+  });
+
+  svg.innerHTML = html;
+}
+
+function buildLegend(legendId, filteredNodes) {
+  var el = document.getElementById(legendId);
+  if (!el) return;
+  el.innerHTML = filteredNodes.map(function(nd) {
+    return '<div class="legend-item">'
+      + '<div class="legend-dot" style="background:' + nodeColor(nd) + '"></div>'
+      + nd + '</div>';
+  }).join("");
+}
+
+// ============================================================
+// TABS
+// ============================================================
+
+document.addEventListener("DOMContentLoaded", function() {
+  // Populate header
+  document.getElementById("lastUpdateSpan").textContent =
+    "Atualizado: " + (D.lastUpdate || "-");
+
+  // Populate filters
+  var selGrupo = document.getElementById("filtroGrupo");
+  Object.keys(D.grupos).forEach(function(g) {
+    var o = document.createElement("option");
+    o.value = g; o.textContent = g;
+    selGrupo.appendChild(o);
+  });
+
+  var selNode = document.getElementById("filtroNode");
+  Object.keys(D.nodes).sort().forEach(function(nd) {
+    var o = document.createElement("option");
+    o.value = nd; o.textContent = nd;
+    selNode.appendChild(o);
+  });
+
+  var selSemana = document.getElementById("filtroSemana");
+  var sems = (D.semanas || []).slice().reverse();
+  sems.forEach(function(sem) {
+    var o = document.createElement("option");
+    o.value = sem; o.textContent = sem;
+    selSemana.appendChild(o);
+  });
+
+  // Filter events
+  selGrupo.addEventListener("change", function() {
+    document.getElementById("filtroNode").value = "todos";
+    renderAll();
+  });
+  selNode.addEventListener("change", function() {
+    if (this.value !== "todos") selGrupo.value = "todos";
+    renderAll();
+  });
+  selSemana.addEventListener("change", renderAll);
+  document.getElementById("filtroMetrica").addEventListener("change", renderRanking);
+
+  // Tab clicks
+  document.getElementById("tabBar").addEventListener("click", function(e) {
+    var btn = e.target;
+    if (btn.tagName !== "BUTTON" || !btn.hasAttribute("data-tab")) return;
+    var tabId = btn.getAttribute("data-tab");
+    document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
+    btn.classList.add("active");
+    document.querySelectorAll(".panel").forEach(function(p) { p.classList.remove("active"); });
+    document.getElementById("panel-" + tabId).classList.add("active");
+    if (tabId === "ranking") { renderRanking(); launchConfetti(); }
+    else renderAll();
+  });
+
+  renderAll();
 });
 
-/* ================================================================== */
-/* FILTER CHANGE EVENTS                                                */
-/* ================================================================== */
-selGrupo.addEventListener('change', function(){ selNode.value='todos'; renderAll(); });
-selNode.addEventListener('change', function(){ if(this.value!=='todos') selGrupo.value='todos'; renderAll(); });
-selSemana.addEventListener('change', renderAll);
+// ============================================================
+// RENDER ALL
+// ============================================================
 
-/* ================================================================== */
-/* FIX 3: SVG CHART ENGINE WITH PILL-LABELS + COLLISION DETECTION     */
-/* ================================================================== */
-function buildChart(svgId, filteredNodes, semanaList, valueGetter, metaValue, yLabel, fmt){
-  var svg = document.getElementById(svgId);
-  if(!svg) return;
-  svg.innerHTML = '';
-  var VW = 960;
-  var vbParts = svg.getAttribute('viewBox').split(' ');
-  var VH = parseInt(vbParts[3]) || 300;
-  var ML = 72, MR = 36, MT = 44, MB = 60;
-  var W = VW - ML - MR, H = VH - MT - MB;
-  var ns = svg.namespaceURI;
-
-  var nList = filteredNodes.filter(function(nk){ return !!nodes[nk]; });
-  if(nList.length === 0){
-    var noData = document.createElementNS(ns,'text');
-    noData.setAttribute('x','480'); noData.setAttribute('y','150');
-    noData.setAttribute('text-anchor','middle');
-    noData.setAttribute('font-size','14'); noData.setAttribute('fill','#94a3b8');
-    noData.textContent = 'Sem dados para exibir'; svg.appendChild(noData); return;
-  }
-
-  function mkEl(tag){ return document.createElementNS(ns, tag); }
-  function attr(el, a, v){ el.setAttribute(a, String(v)); return el; }
-
-  /* Collect all values for scale */
-  var allVals = [];
-  nList.forEach(function(nk){
-    semanaList.forEach(function(s){
-      var v = valueGetter(nk, s);
-      if(v !== null && v !== undefined && v !== '' && !isNaN(Number(v)))
-        allVals.push(Number(v));
-    });
-  });
-  if(metaValue !== null && metaValue !== undefined) allVals.push(metaValue);
-  if(allVals.length === 0){
-    var nd2 = mkEl('text');
-    attr(nd2,'x',480); attr(nd2,'y',150);
-    attr(nd2,'text-anchor','middle'); attr(nd2,'font-size',14); attr(nd2,'fill','#94a3b8');
-    nd2.textContent = 'Sem dados'; svg.appendChild(nd2); return;
-  }
-
-  var yMin = Math.min.apply(null, allVals);
-  var yMax = Math.max.apply(null, allVals);
-  var pad  = (yMax - yMin) * 0.18 || 2;
-  yMin = Math.max(0, yMin - pad);
-  yMax = yMax + pad;
-
-  function toX(i){ return ML + (semanaList.length > 1 ? (i/(semanaList.length-1))*W : W/2); }
-  function toY(v){ return MT + H - ((v - yMin)/(yMax - yMin))*H; }
-
-  /* Grid lines */
-  for(var gi=0; gi<=4; gi++){
-    var gy = MT + gi*H/4;
-    var gv = yMax - gi*(yMax-yMin)/4;
-    var gl = mkEl('line');
-    attr(gl,'x1',ML); attr(gl,'y1',gy); attr(gl,'x2',ML+W); attr(gl,'y2',gy);
-    attr(gl,'stroke','#e2e8f0'); attr(gl,'stroke-width',1);
-    svg.appendChild(gl);
-    var gt = mkEl('text');
-    attr(gt,'x',ML-8); attr(gt,'y',gy+4);
-    attr(gt,'text-anchor','end'); attr(gt,'font-size',10); attr(gt,'fill','#94a3b8');
-    gt.textContent = fmt ? fmt(gv) : fmtNum(gv,1);
-    svg.appendChild(gt);
-  }
-
-  /* Y axis label */
-  var yl = mkEl('text');
-  attr(yl,'x',14); attr(yl,'y',MT+H/2);
-  attr(yl,'text-anchor','middle'); attr(yl,'font-size',10); attr(yl,'fill','#64748b');
-  attr(yl,'transform','rotate(-90,14,'+(MT+H/2)+')');
-  yl.textContent = yLabel || '';
-  svg.appendChild(yl);
-
-  /* Meta line */
-  if(metaValue !== null && metaValue !== undefined){
-    var myY = toY(metaValue);
-    var mline = mkEl('line');
-    attr(mline,'x1',ML); attr(mline,'y1',myY); attr(mline,'x2',ML+W); attr(mline,'y2',myY);
-    attr(mline,'stroke','#ef4444'); attr(mline,'stroke-width',1.5);
-    attr(mline,'stroke-dasharray','6,4'); svg.appendChild(mline);
-    var mtxt = mkEl('text');
-    attr(mtxt,'x',ML+W+4); attr(mtxt,'y',myY+4);
-    attr(mtxt,'font-size',9); attr(mtxt,'fill','#ef4444'); attr(mtxt,'font-weight',600);
-    mtxt.textContent = 'Meta'; svg.appendChild(mtxt);
-  }
-
-  /* X axis labels */
-  semanaList.forEach(function(s, i){
-    var xtxt = mkEl('text');
-    attr(xtxt,'x',toX(i)); attr(xtxt,'y',MT+H+18);
-    attr(xtxt,'text-anchor','middle'); attr(xtxt,'font-size',10); attr(xtxt,'fill','#64748b');
-    xtxt.textContent = s; svg.appendChild(xtxt);
-  });
-
-  /* ---- FIX 3: Collision detection for pill labels ---- */
-  var labelBoxes = [];
-
-  function pillLabel(x, y, text, color){
-    var pw = Math.max(text.length * 5.8 + 12, 28);
-    var ph = 15;
-    var rx = 4;
-    /* Test 4 candidate positions: above, below, right, left */
-    var candidates = [
-      {lx: x - pw/2, ly: y - ph - 10},  /* above */
-      {lx: x - pw/2, ly: y + 10},        /* below */
-      {lx: x + 10,   ly: y - ph/2},      /* right */
-      {lx: x - pw - 10, ly: y - ph/2}    /* left  */
-    ];
-    var chosen = null;
-    for(var ci=0; ci<candidates.length; ci++){
-      var c = candidates[ci];
-      var box = {x:c.lx, y:c.ly, w:pw, h:ph};
-      var collides = false;
-      for(var bi=0; bi<labelBoxes.length; bi++){
-        var b2 = labelBoxes[bi];
-        if(box.x < b2.x+b2.w+2 && box.x+box.w+2 > b2.x &&
-           box.y < b2.y+b2.h+2 && box.y+box.h+2 > b2.y){
-          collides = true; break;
-        }
-      }
-      if(!collides){ chosen = {lx:c.lx, ly:c.ly, box:box}; break; }
-    }
-    if(!chosen){
-      /* Fallback: stack above with increasing vertical offset */
-      var stackOffset = labelBoxes.filter(function(b){
-        return Math.abs(b.x - (x-pw/2)) < pw+4;
-      }).length * (ph + 3);
-      var fbLx = x - pw/2;
-      var fbLy = y - ph - 10 - stackOffset;
-      chosen = {lx:fbLx, ly:fbLy, box:{x:fbLx, y:fbLy, w:pw, h:ph}};
-    }
-    labelBoxes.push(chosen.box);
-    /* Pill rectangle */
-    var rect = mkEl('rect');
-    attr(rect,'x',chosen.lx); attr(rect,'y',chosen.ly);
-    attr(rect,'width',pw); attr(rect,'height',ph);
-    attr(rect,'rx',rx); attr(rect,'fill',color); attr(rect,'opacity',0.93);
-    svg.appendChild(rect);
-    /* Text inside pill */
-    var txt = mkEl('text');
-    attr(txt,'x',chosen.lx+pw/2); attr(txt,'y',chosen.ly+ph-3);
-    attr(txt,'text-anchor','middle'); attr(txt,'font-size',8.5);
-    attr(txt,'fill','#ffffff'); attr(txt,'font-weight',600);
-    txt.textContent = text; svg.appendChild(txt);
-    /* Connector line from pill to data point */
-    var cl = mkEl('line');
-    attr(cl,'x1',x); attr(cl,'y1',y);
-    attr(cl,'x2',chosen.lx+pw/2); attr(cl,'y2',chosen.ly+ph);
-    attr(cl,'stroke',color); attr(cl,'stroke-width',0.8); attr(cl,'opacity',0.45);
-    svg.appendChild(cl);
-  }
-
-  /* Draw lines, circles and pill-labels per node */
-  nList.forEach(function(nk){
-    var color = NODE_COLORS[nk] || '#64748b';
-    var pts = [];
-    semanaList.forEach(function(s, i){
-      var v = valueGetter(nk, s);
-      if(v !== null && v !== undefined && v !== '' && !isNaN(Number(v)))
-        pts.push({x:toX(i), y:toY(Number(v)), v:Number(v)});
-    });
-    if(pts.length === 0) return;
-    /* Polyline */
-    var poly = mkEl('polyline');
-    attr(poly,'points',pts.map(function(p){ return p.x+','+p.y; }).join(' '));
-    attr(poly,'fill','none'); attr(poly,'stroke',color);
-    attr(poly,'stroke-width',2.2); attr(poly,'stroke-linejoin','round');
-    attr(poly,'stroke-linecap','round'); svg.appendChild(poly);
-    /* Points and labels */
-    pts.forEach(function(p){
-      var circ = mkEl('circle');
-      attr(circ,'cx',p.x); attr(circ,'cy',p.y); attr(circ,'r',4.5);
-      attr(circ,'fill',color); svg.appendChild(circ);
-      var lbl = fmt ? fmt(p.v) : fmtNum(p.v,2);
-      pillLabel(p.x, p.y, lbl, color);
-    });
-  });
-
-  /* Legend at bottom */
-  var legX = ML;
-  nList.forEach(function(nk){
-    var color = NODE_COLORS[nk] || '#64748b';
-    var cr = mkEl('circle');
-    attr(cr,'cx',legX+5); attr(cr,'cy',MT+H+42);
-    attr(cr,'r',5); attr(cr,'fill',color); svg.appendChild(cr);
-    var lt = mkEl('text');
-    attr(lt,'x',legX+14); attr(lt,'y',MT+H+46);
-    attr(lt,'font-size',9); attr(lt,'fill','#1e293b');
-    lt.textContent = nk; svg.appendChild(lt);
-    legX += nk.length * 6.8 + 24;
-    if(legX > VW - 80){ legX = ML; /* wrap to next row not implemented, but prevent overflow */ }
-  });
+function renderAll() {
+  renderResumo();
+  renderPPP();
+  renderMetric("receive", "Receive %", "recvChart", "recvLegend", "receiveKpiGrid",
+    function(nd,sem){ var d=getNodeData(nd,sem); return d?normPct(d.receive):null; },
+    98.5, "98.5%", true);
+  renderMetric("stow", "Stow %", "stowChart", "stowLegend", "stowKpiGrid",
+    function(nd,sem){ var d=getNodeData(nd,sem); return d?normPct(d.stow):null; },
+    99.5, "99.5%", true);
+  renderMetric("depart", "Depart %", "depChart", "depLegend", "depKpiGrid",
+    function(nd,sem){ var d=getNodeData(nd,sem); return d?normPct(d.depart):null; },
+    99.5, "99.5%", true);
+  renderOTDCPT("otd", "OTD %", "otdChart", "otdLegend", "otdKpiGrid",
+    function(nd,sem){ var e=getExtras(nd,sem); return e ? normPct(e.otd) : null; }, 100);
+  renderOTDCPT("cpt", "CPT %", "cptChart", "cptLegend", "cptKpiGrid",
+    function(nd,sem){ var e=getExtras(nd,sem); return e ? normPct(e.cpt) : null; }, 100);
+  renderTendencia();
 }
 
-/* ================================================================== */
-/* RENDER RESUMO                                                       */
-/* ================================================================== */
-function renderResumo(){
+// ============================================================
+// RESUMO
+// ============================================================
+
+function renderResumo() {
   var filtered = getFilteredNodes();
-  var sem = getSem();
-  document.getElementById('resumoTitle').textContent =
-    'Resumo ' + sem + ' (' + filtered.length + ' nodes)';
+  var sem = document.getElementById("filtroSemana").value;
 
-  var totVol=0, recvArr=[], stowArr=[], depArr=[], pppArr=[];
-  filtered.forEach(function(nk){
-    var d = getNodeData(nk, sem);
-    if(!d) return;
-    if(d.volume) totVol += Number(d.volume)||0;
-    if(d.receive !== null && d.receive !== '') recvArr.push(Number(d.receive));
-    if(d.stow    !== null && d.stow    !== '') stowArr.push(Number(d.stow));
-    if(d.depart  !== null && d.depart  !== '') depArr.push(Number(d.depart));
-    if(d.ppp     !== null && d.ppp     !== '') pppArr.push(Number(d.ppp));
+  // KPI cards (aggregated)
+  var recvVals=[], stowVals=[], depVals=[], pppVals=[];
+  filtered.forEach(function(nd) {
+    var d = getNodeData(nd, sem);
+    if (!d) return;
+    if (d.receive !== null) recvVals.push(normPct(d.receive));
+    if (d.stow    !== null) stowVals.push(normPct(d.stow));
+    if (d.depart  !== null) depVals.push(normPct(d.depart));
+    if (d.ppp     !== null) pppVals.push(Number(d.ppp));
   });
+  var avg = function(a){ return a.length>0 ? a.reduce(function(x,y){return x+y;},0)/a.length : null; };
+  var avgRecv = avg(recvVals), avgStow = avg(stowVals);
+  var avgDep  = avg(depVals),  avgPpp  = avg(pppVals);
 
-  function avg(arr){ return arr.length ? arr.reduce(function(a,b){return a+b;},0)/arr.length : null; }
-  var avgRecv=avg(recvArr), avgStow=avg(stowArr), avgDep=avg(depArr), avgPpp=avg(pppArr);
-
-  function kpiCard(title, val, meta, fmtFn, detail){
-    var cls = val !== null ? kpiClass(val, meta, true) : '';
-    return '<div class="kpi-card ' + (cls==='ok'?'target-met':'') + (cls==='miss'?'target-miss':'') + '">' +
-      '<h4>' + title + '</h4>' +
-      '<div class="value ' + cls + '">' + (val !== null ? (fmtFn ? fmtFn(val) : fmtPct(val)) : '-') + '</div>' +
-      '<div class="detail">' + detail + '</div></div>';
+  function kpiCard(title, val, target, unit) {
+    var display = val !== null ? val.toFixed(2) + unit : "-";
+    var cls = val !== null ? (val >= target ? "target-met" : (val >= target*0.98 ? "" : "target-miss")) : "";
+    var valCls = val !== null ? (val >= target ? "ok" : (val >= target*0.98 ? "warn" : "miss")) : "";
+    return '<div class="kpi-card ' + cls + '"><h4>' + title + '</h4>' +
+      '<div class="value ' + valCls + '">' + display + '</div>' +
+      '<div class="detail">Meta: ' + target + unit + '</div></div>';
   }
 
-  var kpiGrid = document.getElementById('resumoKPIs');
-  kpiGrid.innerHTML =
-    kpiCard('Volume Total', null, null, function(){ return fmtNum(totVol,0); }, 'pacotes') +
-    kpiCard('Receive Success', avgRecv, METAS.recv, fmtPct, 'Target: 98.5%') +
-    kpiCard('Stow Success', avgStow, METAS.stow, fmtPct, 'Target: 99.5% (D+1)') +
-    kpiCard('Departure Success', avgDep, METAS.dep, fmtPct, 'Target: 99.5% (D+1)') +
-    kpiCard('PPP M&eacute;dio', avgPpp, METAS.ppp, function(v){ return fmtNum(v,1); }, 'Target: &ge; 175');
-  document.getElementById('resumoKPIs').style.gridTemplateColumns = 'repeat(5,1fr)';
+  var grid = document.getElementById("resumoKpiGrid");
+  grid.style.gridTemplateColumns = "repeat(4,1fr)";
+  grid.innerHTML =
+    kpiCard("Receive %", avgRecv, 98.5, "%") +
+    kpiCard("Stow %",    avgStow, 99.5, "%") +
+    kpiCard("Departure %", avgDep, 99.5, "%") +
+    kpiCard("PPP Medio", avgPpp, 175, "");
 
-  /* Table */
-  var thead = document.getElementById('resumoThead');
-  var tbody = document.getElementById('resumoTbody');
-  thead.innerHTML = '<tr><th>Node</th><th>Grupo</th><th>Tipo</th><th>Volume</th>' +
-    '<th>Receive %</th><th>Stow %</th><th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
-  var rows = '';
-  filtered.forEach(function(nk){
-    var nd = nodes[nk]; if(!nd) return;
-    var d = getNodeData(nk, sem); if(!d) return;
-    rows += '<tr>' +
-      '<td>' + nodeTag(nk) + d1Badge(nk) + '</td>' +
-      '<td>' + (nd.grupo||'-') + '</td>' +
-      '<td>' + (nd.tipo||'-') + '</td>' +
-      '<td>' + fmtNum(d.volume,0) + '</td>' +
-      '<td class="' + kpiClass(d.receive, METAS.recv, true) + '">' + fmtPct(d.receive) + '</td>' +
-      '<td class="' + kpiClass(d.stow,    METAS.stow, true) + '">' + fmtPct(d.stow)    + '</td>' +
-      '<td class="' + kpiClass(d.depart,  METAS.dep,  true) + '">' + fmtPct(d.depart)  + '</td>' +
-      '<td class="' + kpiClass(d.ppp, METAS.ppp, true)       + '">' + fmtNum(d.ppp,1)   + '</td>' +
-      '<td>' + fmtNum(d.backlog,0) + '</td></tr>';
-  });
-  tbody.innerHTML = rows;
+  // Table
+  var th = document.getElementById("resumoThead");
+  var tb = document.getElementById("resumoTbody");
+  th.innerHTML = '<tr><th>Node</th><th>Grupo</th><th>Tipo</th>'
+    + '<th>Volume</th><th>Receive %</th><th>Stow %</th>'
+    + '<th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
+  var rows = filtered.map(function(nd) {
+    var d = getNodeData(nd, sem);
+    if (!d) return "";
+    var cfg = D.nodes[nd];
+    var d1s = cfg && cfg.d1_stow ? '<span class="badge-d1">D+1 Stow</span>' : "";
+    var d1d = cfg && cfg.d1_dep  ? '<span class="badge-d1">D+1 Dep</span>'  : "";
+    var rv = normPct(d.receive), sv = normPct(d.stow), dv = normPct(d.depart);
+    return '<tr>'
+      + '<td><span class="node-tag" style="background:' + nodeColor(nd) +'22;color:' + nodeColor(nd) + '">' + nd + '</span>' + d1s + d1d + '</td>'
+      + '<td>' + (cfg?cfg.grupo:"") + '</td>'
+      + '<td>' + (cfg?cfg.tipo:"") + '</td>'
+      + '<td>' + fmtNum(d.volume, 0) + '</td>'
+      + '<td class="' + cellClass(rv,98.5,true) + '">' + (rv!==null?rv.toFixed(2)+"%":"-") + '</td>'
+      + '<td class="' + cellClass(sv,99.5,true) + '">' + (sv!==null?sv.toFixed(2)+"%":"-") + '</td>'
+      + '<td class="' + cellClass(dv,99.5,true) + '">' + (dv!==null?dv.toFixed(2)+"%":"-") + '</td>'
+      + '<td class="' + (d.ppp>=175?"ok":d.ppp>=160?"warn":"miss") + '">' + fmtNum(d.ppp,1) + '</td>'
+      + '<td>' + fmtNum(d.backlog,0) + '</td>'
+      + '</tr>';
+  }).join("");
+  tb.innerHTML = rows;
 }
 
-/* ================================================================== */
-/* GENERIC KPI CARDS FOR TABS                                         */
-/* ================================================================== */
-function renderKPICards(containerId, filtered, sem, getter, meta, fmtFn){
-  var el = document.getElementById(containerId);
-  if(!el) return;
-  var html = '';
-  filtered.forEach(function(nk){
-    var val = getter(nk, sem);
-    var cls = val !== null ? kpiClass(val, meta, true) : '';
-    html += '<div class="kpi-card ' + (cls==='ok'?'target-met':'') + (cls==='miss'?'target-miss':'') + '">' +
-      '<h4>' + nodeTag(nk) + d1Badge(nk) + '</h4>' +
-      '<div class="value ' + cls + '">' + (val !== null ? (fmtFn ? fmtFn(val) : fmtPct(val)) : '-') + '</div>' +
-      '<div class="detail">Target: ' + (fmtFn ? fmtFn(meta) : fmtPct(meta)) + '</div></div>';
-  });
-  el.innerHTML = html;
-  el.style.gridTemplateColumns = 'repeat(' + Math.min(Math.max(filtered.length,1), 7) + ',1fr)';
-}
+// ============================================================
+// PPP
+// ============================================================
 
-/* ================================================================== */
-/* GENERIC METRIC TABLE                                                */
-/* ================================================================== */
-function renderMetricTable(theadId, tbodyId, filtered, semList, getter, meta, fmtFn){
-  var thead = document.getElementById(theadId);
-  var tbody = document.getElementById(tbodyId);
-  if(!thead || !tbody) return;
-  var hdr = '<tr><th>Node</th>';
-  semList.forEach(function(s){ hdr += '<th>' + s + '</th>'; });
-  hdr += '</tr>';
-  thead.innerHTML = hdr;
-  var rows = '';
-  filtered.forEach(function(nk){
-    if(!nodes[nk]) return;
-    rows += '<tr><td>' + nodeTag(nk) + d1Badge(nk) + '</td>';
-    semList.forEach(function(s){
-      var v = getter(nk, s);
-      var cls = v !== null ? kpiClass(v, meta, true) : '';
-      rows += '<td class="' + cls + '">' + (v !== null ? (fmtFn ? fmtFn(v) : fmtPct(v)) : '-') + '</td>';
-    });
-    rows += '</tr>';
-  });
-  tbody.innerHTML = rows;
-}
-
-/* ================================================================== */
-/* RENDER PPP                                                          */
-/* ================================================================== */
-function renderPPP(){
+function renderPPP() {
   var filtered = getFilteredNodes();
-  var sem = getSem();
-  var semsShow = semanas.slice(Math.max(0, semanas.length-8));
-  document.getElementById('pppTitle').textContent = 'PPP — ' + sem;
-  var thead = document.getElementById('pppThead');
-  var tbody = document.getElementById('pppTbody');
-  var hdr = '<tr><th>Node</th><th>Grupo</th>';
-  semsShow.forEach(function(s){ hdr += '<th>' + s + '</th>'; });
-  hdr += '</tr>'; thead.innerHTML = hdr;
-  var rows = '';
-  filtered.forEach(function(nk){
-    var nd = nodes[nk]; if(!nd) return;
-    rows += '<tr><td>' + nodeTag(nk) + '</td><td>' + (nd.grupo||'-') + '</td>';
-    semsShow.forEach(function(s){
-      var d = getNodeData(nk,s);
-      var v = d ? d.ppp : null;
-      rows += '<td class="' + kpiClass(v, METAS.ppp, true) + '">' + fmtNum(v,1) + '</td>';
-    });
-    rows += '</tr>';
-  });
-  tbody.innerHTML = rows;
-  buildChart('pppSvg', filtered, semsShow,
-    function(nk,s){ var d=getNodeData(nk,s); return d ? d.ppp : null; },
-    METAS.ppp, 'PPP', function(v){ return fmtNum(v,0); });
+  var sem = document.getElementById("filtroSemana").value;
+  var allSems = D.semanas || [];
+  var idx = allSems.indexOf(sem);
+  var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
+
+  buildLegend("pppLegend", filtered);
+  renderLineChart("pppChart", filtered, semsToShow,
+    function(nd, s) { var d = getNodeData(nd, s); return d ? d.ppp : null; },
+    175, "Meta 175", false);
+
+  // Table
+  var th = document.getElementById("pppThead");
+  var tb = document.getElementById("pppTbody");
+  var semCols = semsToShow.slice().reverse();
+  th.innerHTML = '<tr><th>Node</th>' +
+    semCols.map(function(s){ return '<th>'+s+'</th>'; }).join("") + '</tr>';
+  tb.innerHTML = filtered.map(function(nd) {
+    var cells = semCols.map(function(s) {
+      var d = getNodeData(nd, s);
+      var v = d ? Number(d.ppp) : null;
+      var cls = v !== null ? (v>=175?"ok":v>=160?"warn":"miss") : "";
+      return '<td class="'+cls+'">' + (v!==null?v.toFixed(1):"-") + '</td>';
+    }).join("");
+    return '<tr><td><b>' + nd + '</b></td>' + cells + '</tr>';
+  }).join("");
 }
 
-/* ================================================================== */
-/* RENDER RECEIVE / STOW / DEPARTURE                                  */
-/* ================================================================== */
-function renderKPI(tabName, kpiKey, meta, theadId, tbodyId, svgId, kpisId, titleId){
+// ============================================================
+// GENERIC METRIC RENDERER (Receive, Stow, Departure)
+// ============================================================
+
+function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target, metaLabel, isPercent) {
   var filtered = getFilteredNodes();
-  var sem = getSem();
-  var semsShow = semanas.slice(Math.max(0, semanas.length-8));
-  var labelMap = {
-    'receive':'Receive Success','stow':'Stow Success','departure':'Departure Success'
-  };
-  var titleSuffix = labelMap[tabName] || tabName;
-  var titleEl = document.getElementById(titleId);
-  if(titleEl) titleEl.textContent = titleSuffix + ' — ' + sem;
-  renderKPICards(kpisId, filtered, sem,
-    function(nk,s){ var d=getNodeData(nk,s); return d ? d[kpiKey] : null; },
-    meta, fmtPct);
-  renderMetricTable(theadId, tbodyId, filtered, semsShow,
-    function(nk,s){ var d=getNodeData(nk,s); return d ? d[kpiKey] : null; },
-    meta, fmtPct);
-  buildChart(svgId, filtered, semsShow,
-    function(nk,s){ var d=getNodeData(nk,s); return d ? d[kpiKey] : null; },
-    meta > 1 ? meta : meta*100, titleSuffix, fmtPct);
+  var sem = document.getElementById("filtroSemana").value;
+  var allSems = D.semanas || [];
+  var idx = allSems.indexOf(sem);
+  var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
+
+  buildLegend(legendId, filtered);
+  renderLineChart(chartId, filtered, semsToShow, getVal, target, metaLabel, isPercent);
+
+  // KPI cards for current week
+  var grid = document.getElementById(kpiGridId);
+  if (!grid) return;
+  var ncols = Math.min(filtered.length, 4);
+  grid.style.gridTemplateColumns = "repeat(" + ncols + ",1fr)";
+  grid.innerHTML = filtered.map(function(nd) {
+    var v = getVal(nd, sem);
+    var cfg = D.nodes[nd];
+    var d1 = (tabId==="stow" && cfg&&cfg.d1_stow) ? ' <span class="badge-d1">D+1</span>' : "";
+    d1 += (tabId==="depart" && cfg&&cfg.d1_dep) ? ' <span class="badge-d1">D+1</span>' : "";
+    var metOk = v !== null && v >= target;
+    var cls = v===null ? "" : (v>=target ? "target-met" : v>=target*0.98 ? "" : "target-miss");
+    var valCls = v===null ? "" : (v>=target ? "ok" : v>=target*0.98 ? "warn" : "miss");
+    return '<div class="kpi-card '+cls+'"><h4>' + nd + d1 + '</h4>'
+      + '<div class="value '+valCls+'">' + (v!==null?v.toFixed(2)+"%":"-") + '</div>'
+      + '<div class="detail">Meta: ' + target + "%</div></div>";
+  }).join("");
 }
 
-/* ================================================================== */
-/* FIX 1: RENDER OTD / CPT (correct % handling)                      */
-/* ================================================================== */
-function renderExtrasTab(tabName, extKey, svgId, kpisId, titleId, msgId){
+// ============================================================
+// OTD / CPT RENDERER
+// *** FIX 1 applied: fmtPct handles both decimal (<=1) and percent (>1) formats ***
+// ============================================================
+
+function renderOTDCPT(tabId, title, chartId, legendId, kpiGridId, getVal, target) {
   var filtered = getFilteredNodes();
-  var sem = getSem();
-  var semsShow = semanas.slice(Math.max(0, semanas.length-8));
-  var label = tabName.toUpperCase();
-  var titleEl = document.getElementById(titleId);
-  if(titleEl) titleEl.textContent = label + ' — ' + sem;
+  var sem = document.getElementById("filtroSemana").value;
+  var allSems = D.semanas || [];
+  var idx = allSems.indexOf(sem);
+  var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
 
-  /* FIX 1: normalizePercent handles values >1 (already %) and <=1 (decimal) */
-  function getVal(nk, s){
-    var e = getExtra(nk, s);
-    if(!e || e[extKey] === null || e[extKey] === undefined || e[extKey] === '') return null;
-    return normalizePercent(e[extKey]);
-  }
+  buildLegend(legendId, filtered);
+  renderLineChart(chartId, filtered, semsToShow, getVal, target, "Meta " + target + "%", true);
 
-  /* KPI cards: meta = 100 (since values are now in %) */
-  renderKPICards(kpisId, filtered, sem, getVal, 100,
-    function(v){ return v !== null ? v.toFixed(2)+'%' : '-'; });
-
-  /* Chart: meta line at 100 */
-  buildChart(svgId, filtered, semsShow, getVal, 100, label+' %',
-    function(v){ return v !== null ? v.toFixed(2)+'%' : '-'; });
-
-  /* Success message if all nodes at 100% */
-  var msgEl = document.getElementById(msgId);
-  if(msgEl){
-    var allOk = filtered.length > 0 && filtered.every(function(nk){
-      var v = getVal(nk, sem);
-      return v !== null && v >= 100;
-    });
-    msgEl.innerHTML = allOk ?
-      '<div class="success-msg"><span>&#10004; ' + label +
-       ' 100% &mdash; Todos os nodes dentro do prazo em ' + sem + '</span></div>' : '';
-  }
+  var grid = document.getElementById(kpiGridId);
+  if (!grid) return;
+  var ncols = Math.min(filtered.length, 4);
+  grid.style.gridTemplateColumns = "repeat(" + ncols + ",1fr)";
+  grid.innerHTML = filtered.map(function(nd) {
+    var v = getVal(nd, sem);
+    // v is already normalized (percent form via normPct)
+    var cls = v===null ? "" : (v>=target ? "target-met" : v>=target*0.98 ? "" : "target-miss");
+    var valCls = v===null ? "" : (v>=target ? "ok" : v>=target*0.98 ? "warn" : "miss");
+    return '<div class="kpi-card '+cls+'"><h4>' + nd + '</h4>'
+      + '<div class="value '+valCls+'">' + (v!==null?v.toFixed(2)+"%":"-") + '</div>'
+      + '<div class="detail">Meta: ' + target + "%</div></div>";
+  }).join("");
 }
 
-/* ================================================================== */
-/* RENDER TENDENCIA                                                    */
-/* ================================================================== */
-window.setTrendMode = function(mode){
+// ============================================================
+// TENDENCIA
+// ============================================================
+
+var trendMode = "semanal";
+window.setTrendMode = function(mode) {
   trendMode = mode;
-  document.getElementById('btnSemanal').className = 'tab' + (mode==='semanal'?' active':'');
-  document.getElementById('btnDiario').className  = 'tab' + (mode==='diario'?' active':'');
+  document.getElementById("btnSemanal").classList.toggle("active", mode === "semanal");
+  document.getElementById("btnDiario").classList.toggle("active", mode === "diario");
   renderTendencia();
 };
 
-function renderTendencia(){
+function renderTendencia() {
   var filtered = getFilteredNodes();
-  var container = document.getElementById('tendenciaContent');
-  container.innerHTML = '';
-  if(trendMode === 'semanal'){
-    var semsShow = semanas.slice(Math.max(0, semanas.length-6));
-    var kpis = [
-      {key:'receive', label:'Receive %',   meta:METAS.recv*100, fmt:fmtPct},
-      {key:'stow',    label:'Stow %',      meta:METAS.stow*100, fmt:fmtPct},
-      {key:'depart',  label:'Departure %', meta:METAS.dep*100,  fmt:fmtPct},
-      {key:'ppp',     label:'PPP',         meta:METAS.ppp,      fmt:function(v){return fmtNum(v,0);}}
-    ];
-    kpis.forEach(function(kpi, ki){
-      var card = document.createElement('div');
-      card.className = 'chart-container';
-      var metaLabel = kpi.fmt ? kpi.fmt(kpi.meta) : kpi.meta;
-      card.innerHTML = '<h3>' + kpi.label + ' (&uacute;ltimas ' + semsShow.length + ' semanas)</h3>' +
-        '<div class="chart-meta">Meta: ' + metaLabel + '</div>' +
-        '<svg id="trendSvg_' + ki + '" viewBox="0 0 960 280" preserveAspectRatio="xMidYMid meet"></svg>';
-      container.appendChild(card);
-      buildChart('trendSvg_'+ki, filtered, semsShow,
-        function(nk,s){ var d=getNodeData(nk,s); return d ? d[kpi.key] : null; },
-        kpi.meta, kpi.label, kpi.fmt);
-    });
+  var sem = document.getElementById("filtroSemana").value;
+  var allSems = D.semanas || [];
+  var idx = allSems.indexOf(sem);
+  var container = document.getElementById("tendenciaContent");
+
+  if (trendMode === "semanal") {
+    var semsToShow = allSems.slice(Math.max(0, idx - 4), idx + 1);
+    var svgId = "tendSemChart";
+    container.innerHTML = '<div class="legend" id="tendLegend"></div>'
+      + '<div class="chart-container"><h3>Receive % - Tendencia Semanal</h3>'
+      + '<svg id="' + svgId + '" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg></div>';
+    buildLegend("tendLegend", filtered);
+    renderLineChart(svgId, filtered, semsToShow,
+      function(nd,s){ var d=getNodeData(nd,s); return d?normPct(d.receive):null; },
+      98.5, "98.5%", true);
   } else {
-    /* Daily mode */
-    var nodesDailyData = {};
-    filtered.forEach(function(nk){ nodesDailyData[nk] = {}; });
-    Object.keys(daily).forEach(function(k){
-      var parts = k.split('|');
-      if(parts.length < 2) return;
-      var dt = parts[0], nk = parts[1];
-      if(filtered.indexOf(nk) === -1) return;
-      if(!nodesDailyData[nk]) nodesDailyData[nk] = {};
-      nodesDailyData[nk][dt] = daily[k];
-    });
-    var hasAnyDaily = filtered.some(function(nk){
-      return Object.keys(nodesDailyData[nk]).length > 0;
-    });
-    if(!hasAnyDaily){
-      container.innerHTML = '<div style="padding:60px;text-align:center;color:#94a3b8;font-size:1.1rem">' +
-        'Dados di&aacute;rios dispon&iacute;veis ap&oacute;s pr&oacute;ximo ciclo de importa&ccedil;&atilde;o.<br>' +
-        '<small>Fonte: shipment_level.csv com datas di&aacute;rias.</small></div>';
+    // Daily mode
+    if (!D.daily || Object.keys(D.daily).length === 0) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
+        + 'Dados diarios ainda nao disponíveis.</div>';
       return;
     }
-    var allDates = {};
-    filtered.forEach(function(nk){
-      Object.keys(nodesDailyData[nk]).forEach(function(dt){ allDates[dt] = 1; });
+    // Collect dates for filtered nodes
+    var datesSet = {};
+    Object.keys(D.daily).forEach(function(k) {
+      var parts = k.split("|");
+      var nd = parts[1];
+      if (filtered.indexOf(nd) > -1) datesSet[parts[0]] = true;
     });
-    var sortedDates = Object.keys(allDates).sort().slice(-6);
-    var card = document.createElement('div');
-    card.className = 'chart-container';
-    card.innerHTML = '<h3>Miss Di&aacute;rio por Node (&uacute;ltimos ' + sortedDates.length + ' dias)</h3>' +
-      '<div class="chart-meta">Miss reais (p&oacute;s-corre&ccedil;&atilde;o D+1)</div>' +
-      '<svg id="trendDailySvg" viewBox="0 0 960 300" preserveAspectRatio="xMidYMid meet"></svg>';
-    container.appendChild(card);
-    buildChart('trendDailySvg', filtered, sortedDates,
-      function(nk, dt){
-        var dd = nodesDailyData[nk][dt];
-        return dd ? dd.miss_real : null;
-      },
-      null, 'Miss', function(v){ return String(Math.round(v)); });
+    var dates = Object.keys(datesSet).sort().slice(-6);
+    container.innerHTML = '<div class="legend" id="tendDailyLegend"></div>'
+      + '<div class="chart-container"><h3>Miss Diarios - Tendencia</h3>'
+      + '<svg id="tendDailyChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg></div>';
+    buildLegend("tendDailyLegend", filtered);
+    renderLineChart("tendDailyChart", filtered, dates,
+      function(nd, dt) {
+        var key = dt + "|" + nd;
+        if (!D.daily[key]) return null;
+        return D.daily[key].miss_real;
+      }, null, null, false);
   }
 }
 
-/* ================================================================== */
-/* FIX 2: ADAPTIVE PODIUM (1 / 2 / 3+ nodes)                        */
-/* ================================================================== */
-function buildRanking(){
+// ============================================================
+// RANKING WITH ADAPTIVE PODIUM
+// *** FIX 2: Podium adapts to number of filtered nodes:
+//     1 node = only gold centered, 2 nodes = gold + silver, 3+ = normal podium ***
+// ============================================================
+
+function renderRanking() {
   var filtered = getFilteredNodes();
-  var sem = getSem();
-  var rankTitle = document.getElementById('rankingTitle');
-  if(rankTitle) rankTitle.textContent = 'Ranking — ' + sem;
+  var sem = document.getElementById("filtroSemana").value;
+  var metrica = document.getElementById("filtroMetrica").value;
 
-  var scores = [];
-  filtered.forEach(function(nk){
-    var nd = nodes[nk]; if(!nd) return;
-    var d  = getNodeData(nk, sem); if(!d) return;
-    var ex = getExtra(nk, sem) || {};
-    /* FIX 1 applied in ranking too: normalize OTD/CPT before delta */
-    var recv = d.receive !== null && d.receive !== '' ? (Number(d.receive)*100 - METAS.recv*100) : null;
-    var stow = d.stow    !== null && d.stow    !== '' ? (Number(d.stow)*100    - METAS.stow*100) : null;
-    var dep  = d.depart  !== null && d.depart  !== '' ? (Number(d.depart)*100  - METAS.dep*100)  : null;
-    var rawOtd = ex.otd !== undefined ? normalizePercent(ex.otd) : null;
-    var rawCpt = ex.cpt !== undefined ? normalizePercent(ex.cpt) : null;
-    var otd = rawOtd !== null ? (rawOtd - 100) : null;
-    var cpt = rawCpt !== null ? (rawCpt - 100) : null;
-    var vals = [recv, stow, dep, otd, cpt].filter(function(v){ return v !== null; });
-    if(vals.length === 0) return;
-    var sc = vals.reduce(function(a,b){return a+b;},0) / vals.length;
-    scores.push({
-      node:nk, score:sc, recv:recv, stow:stow, dep:dep,
-      otd:otd, cpt:cpt, ppp:d.ppp, vol:d.volume, grupo:nd.grupo||''
-    });
-  });
+  var scores = filtered.map(function(nd) {
+    var d  = getNodeData(nd, sem);
+    var ex = getExtras(nd, sem);
+    if (!d) return null;
+    var rv = normPct(d.receive)  || 0;
+    var sv = normPct(d.stow)     || 0;
+    var dv = normPct(d.depart)   || 0;
+    var ov = ex ? normPct(ex.otd) || 0 : null;
+    var cv = ex ? normPct(ex.cpt) || 0 : null;
+    var components = [rv - 98.5, sv - 99.5, dv - 99.5];
+    if (ov !== null) components.push(ov - 100);
+    if (cv !== null) components.push(cv - 100);
+    var score = components.reduce(function(a,b){return a+b;},0) / components.length;
+    var sortVal = metrica === "ppp" ? (d.ppp || 0)
+               : metrica === "volume" ? (d.volume || 0)
+               : (normPct(d[metrica]) || 0);
+    return {
+      node: nd, score: score, sortVal: sortVal,
+      ppp: d.ppp, vol: d.volume, grupo: D.nodes[nd] ? D.nodes[nd].grupo : "",
+      rd: rv-98.5, sd: sv-99.5, dd: dv-99.5,
+      od: ov!==null?ov-100:null, cd: cv!==null?cv-100:null
+    };
+  }).filter(function(x){ return x !== null; });
 
-  scores.sort(function(a,b){
-    if(Math.abs(b.score-a.score)>0.001) return b.score-a.score;
-    if((b.stow||0)!==(a.stow||0)) return (b.stow||0)-(a.stow||0);
-    if((b.recv||0)!==(a.recv||0)) return (b.recv||0)-(a.recv||0);
-    if((b.dep||0)!==(a.dep||0))   return (b.dep||0)-(a.dep||0);
-    if((b.vol||0)!==(a.vol||0))   return (b.vol||0)-(a.vol||0);
-    return (b.ppp||0)-(a.ppp||0);
-  });
+  scores.sort(function(a,b) { return b.score - a.score; });
 
-  /* FIX 2: Adaptive podium */
-  var podCont = document.getElementById('podiumContainer');
-  podCont.innerHTML = '';
-  var n = scores.length;
+  // *** FIX 2: Build adaptive podium ***
+  var container = document.getElementById("podiumContainer");
+  container.innerHTML = "";
 
-  if(n === 0){
-    podCont.innerHTML = '<p style="color:#94a3b8;padding:40px">Sem dados para ranking.</p>';
-  } else if(n === 1){
-    /* Only 1 node: show gold centered */
-    var s0 = scores[0];
-    var div1 = document.createElement('div');
-    div1.className = 'podium-item podium-1st';
-    div1.style.marginLeft = 'auto'; div1.style.marginRight = 'auto';
-    div1.innerHTML = '<div class="podium-block">' +
-      '<div class="podium-medal">&#129351;</div>' +
-      '<div class="podium-node">' + nodeTag(s0.node) + '</div>' +
-      '<div class="podium-score">' + (s0.score>=0?'+':'') + s0.score.toFixed(2) + ' pp</div>' +
-      '<div class="podium-ppp">PPP: ' + fmtNum(s0.ppp,0) + ' | Vol: ' + fmtNum(s0.vol,0) + '</div>' +
-      '</div>';
-    podCont.appendChild(div1);
-  } else if(n === 2){
-    /* 2 nodes: silver on left, gold on right (taller) */
-    var order2 = [scores[1], scores[0]]; /* silver, gold */
-    var classes2 = ['podium-2nd','podium-1st'];
-    var medals2 = ['&#129352;','&#129351;'];
-    order2.forEach(function(s, i){
-      var div2 = document.createElement('div');
-      div2.className = 'podium-item ' + classes2[i];
-      div2.innerHTML = '<div class="podium-block">' +
-        '<div class="podium-medal">' + medals2[i] + '</div>' +
-        '<div class="podium-node">' + nodeTag(s.node) + '</div>' +
-        '<div class="podium-score">' + (s.score>=0?'+':'') + s.score.toFixed(2) + ' pp</div>' +
-        '<div class="podium-ppp">PPP: ' + fmtNum(s.ppp,0) + ' | Vol: ' + fmtNum(s.vol,0) + '</div>' +
-        '</div>';
-      podCont.appendChild(div2);
+  var medals = ["🥇","🥈","🥉"];
+  var podiumClasses = ["podium-1st","podium-2nd","podium-3rd"];
+
+  if (scores.length === 0) {
+    container.innerHTML = '<p style="color:#64748b">Sem dados para o periodo selecionado.</p>';
+  } else if (scores.length === 1) {
+    // 1 node: only gold, centered
+    container.style.justifyContent = "center";
+    var item = document.createElement("div");
+    item.className = "podium-item podium-1st";
+    item.innerHTML = buildPodiumBlock(scores[0], medals[0]);
+    container.appendChild(item);
+  } else if (scores.length === 2) {
+    // 2 nodes: gold + silver
+    container.style.justifyContent = "center";
+    var order = [scores[1], scores[0]]; // silver on left, gold on right
+    var classes = ["podium-2nd","podium-1st"];
+    var meds    = [medals[1], medals[0]];
+    order.forEach(function(s, i) {
+      var item = document.createElement("div");
+      item.className = "podium-item " + classes[i];
+      item.innerHTML = buildPodiumBlock(s, meds[i]);
+      container.appendChild(item);
     });
   } else {
-    /* 3+ nodes: classic silver, gold, bronze layout */
-    var top3 = scores.slice(0,3);
-    var podOrder = [top3[1], top3[0], top3[2]]; /* silver, gold, bronze */
-    var podClasses = ['podium-2nd','podium-1st','podium-3rd'];
-    var medals3 = ['&#129352;','&#129351;','&#129353;'];
-    podOrder.forEach(function(s, i){
-      if(!s) return;
-      var div3 = document.createElement('div');
-      div3.className = 'podium-item ' + podClasses[i];
-      div3.innerHTML = '<div class="podium-block">' +
-        '<div class="podium-medal">' + medals3[i] + '</div>' +
-        '<div class="podium-node">' + nodeTag(s.node) + '</div>' +
-        '<div class="podium-score">' + (s.score>=0?'+':'') + s.score.toFixed(2) + ' pp</div>' +
-        '<div class="podium-ppp">PPP: ' + fmtNum(s.ppp,0) + ' | Vol: ' + fmtNum(s.vol,0) + '</div>' +
-        '</div>';
-      podCont.appendChild(div3);
+    // 3+ nodes: normal podium (2nd, 1st, 3rd)
+    container.style.justifyContent = "";
+    var podOrder = [scores[1], scores[0], scores[2]];
+    var podClasses = ["podium-2nd","podium-1st","podium-3rd"];
+    var podMedals  = [medals[1], medals[0], medals[2]];
+    podOrder.forEach(function(s, i) {
+      var item = document.createElement("div");
+      item.className = "podium-item " + podClasses[i];
+      item.innerHTML = buildPodiumBlock(s, podMedals[i]);
+      container.appendChild(item);
     });
   }
 
-  /* Ranking table */
-  var tbody = document.getElementById('rankTable');
-  var rows = '';
-  scores.forEach(function(s, i){
-    function gap(v){ return v !== null ? (v>=0?'+':'') + v.toFixed(2) : '-'; }
-    function gCls(v){ return v===null?'': v>=0?'ok':'miss'; }
-    var otdDisp = s.otd !== null ? gap(s.otd) : '-';
-    var cptDisp = s.cpt !== null ? gap(s.cpt) : '-';
-    rows += '<tr>' +
-      '<td><strong>' + (i+1) + '&ordm;</strong></td>' +
-      '<td>' + nodeTag(s.node) + '</td>' +
-      '<td>' + s.grupo + '</td>' +
-      '<td class="' + gCls(s.recv) + '">' + gap(s.recv) + '</td>' +
-      '<td class="' + gCls(s.stow) + '">' + gap(s.stow) + '</td>' +
-      '<td class="' + gCls(s.dep)  + '">' + gap(s.dep)  + '</td>' +
-      '<td class="' + gCls(s.otd)  + '">' + otdDisp     + '</td>' +
-      '<td class="' + gCls(s.cpt)  + '">' + cptDisp     + '</td>' +
-      '<td>' + fmtNum(s.ppp,1) + '</td>' +
-      '<td><strong>' + (s.score>=0?'+':'') + s.score.toFixed(2) + ' pp</strong></td>' +
-      '</tr>';
-  });
-  tbody.innerHTML = rows;
+  // Ranking table
+  var tbody = document.getElementById("rankTable");
+  tbody.innerHTML = scores.map(function(s, i) {
+    function fmtGap(v) {
+      if (v===null||v===undefined) return "-";
+      return (v>=0?"+":"") + v.toFixed(2);
+    }
+    var rdCls = s.rd >= 0 ? "ok" : "miss";
+    var sdCls = s.sd >= 0 ? "ok" : "miss";
+    var ddCls = s.dd >= 0 ? "ok" : "miss";
+    var odCls = s.od!==null ? (s.od>=0?"ok":"miss") : "";
+    var cdCls = s.cd!==null ? (s.cd>=0?"ok":"miss") : "";
+    return '<tr>'
+      + '<td><b>' + (i+1) + '</b></td>'
+      + '<td><span class="node-tag" style="background:' + nodeColor(s.node) + '22;color:' + nodeColor(s.node) + '">' + s.node + '</span></td>'
+      + '<td>' + s.grupo + '</td>'
+      + '<td class="'+rdCls+'">' + fmtGap(s.rd) + '</td>'
+      + '<td class="'+sdCls+'">' + fmtGap(s.sd) + '</td>'
+      + '<td class="'+ddCls+'">' + fmtGap(s.dd) + '</td>'
+      + '<td class="'+odCls+'">' + fmtGap(s.od) + '</td>'
+      + '<td class="'+cdCls+'">' + fmtGap(s.cd) + '</td>'
+      + '<td><b>' + (s.score>=0?"+":"") + s.score.toFixed(2) + '</b></td>'
+      + '</tr>';
+  }).join("");
 }
 
-/* ================================================================== */
-/* CONFETTI                                                            */
-/* ================================================================== */
-function launchConfetti(){
-  var colors = ['#f59e0b','#3b82f6','#10b981','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
-  var wrapper = document.createElement('div');
-  wrapper.className = 'confetti';
+function buildPodiumBlock(s, medal) {
+  return '<div class="podium-block">'
+    + '<div class="podium-medal">' + medal + '</div>'
+    + '<div class="podium-node">' + s.node + '</div>'
+    + '<div class="podium-score">' + (s.score>=0?"+":"") + s.score.toFixed(2) + ' pp</div>'
+    + '<div class="podium-ppp">PPP: ' + (s.ppp?Number(s.ppp).toFixed(0):"--") + '</div>'
+    + '</div>';
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+
+function launchConfetti() {
+  var colors = ["#f59e0b","#3b82f6","#10b981","#ef4444","#8b5cf6","#ec4899"];
+  var wrapper = document.createElement("div");
+  wrapper.className = "confetti";
   document.body.appendChild(wrapper);
-  for(var i=0; i<120; i++){
-    var piece = document.createElement('div');
-    piece.className = 'confetti-piece';
-    piece.style.left = Math.random()*100 + '%';
-    piece.style.animationDelay = Math.random()*2 + 's';
-    piece.style.animationDuration = (2+Math.random()*2) + 's';
+  for (var i = 0; i < 80; i++) {
+    var piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random()*100 + "%";
+    piece.style.animationDelay = (Math.random()*2) + "s";
+    piece.style.animationDuration = (2 + Math.random()*2) + "s";
     piece.style.background = colors[Math.floor(Math.random()*colors.length)];
-    piece.style.borderRadius = Math.random()>0.5 ? '50%' : '0';
-    piece.style.width  = (6+Math.random()*8) + 'px';
-    piece.style.height = (6+Math.random()*8) + 'px';
+    piece.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+    piece.style.width  = (6 + Math.random()*8) + "px";
+    piece.style.height = (6 + Math.random()*8) + "px";
     wrapper.appendChild(piece);
   }
-  setTimeout(function(){ if(wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); }, 4500);
+  setTimeout(function() { wrapper.remove(); }, 4200);
 }
-
-/* ================================================================== */
-/* MASTER RENDER                                                       */
-/* ================================================================== */
-function renderCurrentTab(){
-  var activeTab = document.querySelector('.tab.active[data-tab]');
-  if(!activeTab) return;
-  var t = activeTab.getAttribute('data-tab');
-  if(t==='resumo')    renderResumo();
-  if(t==='ppp')       renderPPP();
-  if(t==='receive')   renderKPI('receive','receive',METAS.recv,'receiveThead','receiveTbody','receiveSvg','receiveKPIs','receiveTitle');
-  if(t==='stow')      renderKPI('stow','stow',METAS.stow,'stowThead','stowTbody','stowSvg','stowKPIs','stowTitle');
-  if(t==='departure') renderKPI('departure','depart',METAS.dep,'departureThead','departureTbody','departureSvg','departureKPIs','departureTitle');
-  if(t==='otd')       renderExtrasTab('otd','otd','otdSvg','otdKPIs','otdTitle','otdSuccessMsg');
-  if(t==='cpt')       renderExtrasTab('cpt','cpt','cptSvg','cptKPIs','cptTitle','cptSuccessMsg');
-  if(t==='tendencia') renderTendencia();
-  if(t==='ranking'){ buildRanking(); launchConfetti(); }
-}
-
-function renderAll(){ renderCurrentTab(); }
-
-/* Initial render on load */
-renderResumo();
 
 })();
 </script>
