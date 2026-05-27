@@ -257,7 +257,8 @@ var NODE_COLORS = {
   EJO8:"#2980b9", EME8:"#d35400"
 };
 var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 };
-
+var EXCLUDE_NODES = ["EOZ8"];
+       
 // ============================================================
 // HELPERS
 // ============================================================
@@ -307,9 +308,14 @@ function normPct(v) {
 function getFilteredNodes() {
   var grupo = document.getElementById("filtroGrupo").value;
   var node  = document.getElementById("filtroNode").value;
-  if (node !== "todos") return [node];
-  if (grupo !== "todos") return (D.grupos[grupo] || []).filter(function(nd){ return !!D.nodes[nd]; });
-  return Object.keys(D.nodes).sort();
+  if (node !== "todos") return EXCLUDE_NODES.indexOf(node) === -1 ? [node] : [];
+  var list;
+  if (grupo !== "todos") {
+    list = (D.grupos[grupo] || []).filter(function(nd){ return !!D.nodes[nd]; });
+  } else {
+    list = Object.keys(D.nodes).sort();
+  }
+  return list.filter(function(nd){ return EXCLUDE_NODES.indexOf(nd) === -1; });
 }
 
 // ============================================================
