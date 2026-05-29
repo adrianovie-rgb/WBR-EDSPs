@@ -319,7 +319,7 @@ function getFilteredNodes() {
 }
 
 // ============================================================
-// CHART RENDERING — PILL-LABELS ONLY ON LAST POINT
+// CHART RENDERING — LABELS EM TODAS AS MARCACOES
 // Collision detection robusta com 12 posicoes + fallback progressivo
 // ============================================================
 
@@ -390,18 +390,18 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
 
   function findFreePos(cx, cy, lw, lh) {
     var offsets = [
-      { dx: 8,       dy: -lh/2 },
-      { dx: 8,       dy: -lh - 2 },
-      { dx: 8,       dy: 4 },
-      { dx: -lw - 8, dy: -lh/2 },
-      { dx: -lw - 8, dy: -lh - 2 },
-      { dx: -lw - 8, dy: 4 },
-      { dx: -lw/2,   dy: -lh - 10 },
-      { dx: -lw/2,   dy: 10 },
-      { dx: 14,      dy: -lh - 8 },
-      { dx: 14,      dy: 10 },
-      { dx: -lw - 14, dy: -lh - 8 },
-      { dx: -lw - 14, dy: 10 }
+      { dx: -lw/2, dy: -lh - 6 },
+      { dx: -lw/2, dy: 8 },
+      { dx: 6,     dy: -lh/2 },
+      { dx: -lw-6, dy: -lh/2 },
+      { dx: 6,     dy: -lh - 4 },
+      { dx: -lw-6, dy: -lh - 4 },
+      { dx: 6,     dy: 4 },
+      { dx: -lw-6, dy: 4 },
+      { dx: -lw/2, dy: -lh - 14 },
+      { dx: -lw/2, dy: 14 },
+      { dx: 12,    dy: -lh - 8 },
+      { dx: -lw-12,dy: -lh - 8 }
     ];
     for (var oi = 0; oi < offsets.length; oi++) {
       var rx = cx + offsets[oi].dx;
@@ -417,12 +417,12 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     }
     // Progressive fallback
     for (var att = 0; att < 20; att++) {
-      var stackY = cy - lh/2 - (att + 1) * (lh + 4);
-      var stackX = cx + 8;
-      if (stackX + lw > W - 5) stackX = cx - lw - 8;
-      if (stackY < 5) stackY = cy + 4 + att * (lh + 4);
+      var stackY = cy - lh/2 - (att + 1) * (lh + 3);
+      var stackX = cx - lw/2;
+      if (stackX + lw > W - 5) stackX = cx - lw - 6;
+      if (stackX < 5) stackX = cx + 6;
+      if (stackY < 5) stackY = cy + 4 + att * (lh + 3);
       if (stackY + lh > H - 10) continue;
-      if (stackX < 5) continue;
       var fallCand = { x: stackX, y: stackY, w: lw, h: lh };
       var fallOk = true;
       for (var fi = 0; fi < placedLabels.length; fi++) {
@@ -430,10 +430,10 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
       }
       if (fallOk) return { x: stackX, y: stackY };
     }
-    return { x: cx + 8, y: cy - lh - 8 - placedLabels.length * 3 };
+    return { x: cx - lw/2, y: cy - lh - 8 - placedLabels.length * 2 };
   }
 
-  // Draw lines, points, and pill-labels (ONLY on last point)
+  // Draw lines and points first
   filteredNodes.forEach(function(nd) {
     var color = nodeColor(nd);
     var points = [];
@@ -455,28 +455,57 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     points.forEach(function(pt) {
       html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + color + '" stroke="#fff" stroke-width="1.5"/>';
     });
+  });
 
-    // PILL-LABEL ONLY ON LAST POINT (node name + value)
-    var lastPt = points[points.length - 1];
-    var valText = isPercent ? lastPt.v.toFixed(2) + "%" : lastPt.v.toFixed(1);
-    var lblText = nd + " " + valText;
-    var lw = Math.max(lblText.length * 5.8 + 12, 44);
-    var lh = 17;
-    var pos = findFreePos(lastPt.x, lastPt.y, lw, lh);
-    placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
+  // Now draw ALL labels with collision detection
+  filteredNodes.forEach(function(nd) {
+    var color = nodeColor(nd);
+    var points = [];
+    semanas.forEach(function(sem, si) {
+      var v = getData(nd, sem);
+      if (v !== null && v !== undefined && !isNaN(Number(v))) {
+        points.push({ x: xPos(si), y: yPos(Number(v)), v: Number(v), idx: si });
+      }
+    });
+    if (points.length === 0) return;
 
-    // Pill rectangle
-    html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '" opacity="0.92"/>';
-    // White bold text inside pill
-    html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '" font-size="8.5" fill="white" text-anchor="middle" font-weight="700">' + lblText + '</text>';
+    points.forEach(function(pt, pi) {
+      var isLast = (pi === points.length - 1);
+      var valText = isPercent ? pt.v.toFixed(1) + "%" : pt.v.toFixed(1);
 
-    // Connector line (dashed)
-    var connX = pos.x < lastPt.x ? pos.x + lw : pos.x;
-    var connY = pos.y + lh/2;
-    var dist = Math.sqrt(Math.pow(lastPt.x - connX, 2) + Math.pow(lastPt.y - connY, 2));
-    if (dist > 12) {
-      html += '<line x1="' + lastPt.x + '" y1="' + lastPt.y + '" x2="' + connX + '" y2="' + connY + '" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
-    }
+      if (isLast) {
+        // LAST POINT: Pill-label com node + valor (destaque)
+        var lblText = nd + " " + valText;
+        var lw = Math.max(lblText.length * 5.8 + 12, 44);
+        var lh = 17;
+        var pos = findFreePos(pt.x, pt.y, lw, lh);
+        placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
+
+        // Pill rectangle
+        html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '" opacity="0.92"/>';
+        // White bold text
+        html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '" font-size="8.5" fill="white" text-anchor="middle" font-weight="700">' + lblText + '</text>';
+
+        // Connector line
+        var connX = pos.x < pt.x ? pos.x + lw : pos.x;
+        var connY = pos.y + lh/2;
+        var dist = Math.sqrt(Math.pow(pt.x - connX, 2) + Math.pow(pt.y - connY, 2));
+        if (dist > 12) {
+          html += '<line x1="' + pt.x + '" y1="' + pt.y + '" x2="' + connX + '" y2="' + connY + '" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
+        }
+      } else {
+        // INTERMEDIATE POINTS: Texto simples com valor (sem pill)
+        var lw2 = Math.max(valText.length * 5.2 + 6, 28);
+        var lh2 = 13;
+        var pos2 = findFreePos(pt.x, pt.y, lw2, lh2);
+        placedLabels.push({ x: pos2.x, y: pos2.y, w: lw2, h: lh2 });
+
+        // Fundo semi-transparente branco para legibilidade
+        html += '<rect x="' + pos2.x + '" y="' + pos2.y + '" width="' + lw2 + '" height="' + lh2 + '" rx="2" fill="white" opacity="0.85"/>';
+        // Texto colorido com valor
+        html += '<text x="' + (pos2.x + lw2/2) + '" y="' + (pos2.y + lh2 - 3) + '" font-size="7.5" fill="' + color + '" text-anchor="middle" font-weight="600">' + valText + '</text>';
+      }
+    });
   });
 
   svg.innerHTML = html;
