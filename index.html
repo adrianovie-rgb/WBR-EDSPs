@@ -240,16 +240,21 @@ tr:hover{background:#f8fafc}
 <div class="panel" id="panel-ranking">
   <div class="section-title">Ranking - Performance Consolidada</div>
   <p style="font-size:.85rem;color:#64748b;margin-bottom:12px">
-    Score = media dos gaps (Recv-98.5, Stow-99.5, Dep-99.5).
+    Score = media ponderada por volume dos gaps (Stow-99.5, Recv-98.5, Dep-99.5).
     Desempate: Stow > Recv > Dep > Volume > PPP.
   </p>
+  <div class="trend-toggle" style="margin-bottom:20px">
+    <button class="active" id="btnRankNode" onclick="setRankMode('node')">Por Node</button>
+    <button id="btnRankGrupo" onclick="setRankMode('grupo')">Por Grupo</button>
+    <button id="btnRankRegional" onclick="setRankMode('regional')">Por Regional</button>
+  </div>
   <div class="podium-container" id="podiumContainer"></div>
   <div style="text-align:center;margin-top:24px">
     <table style="margin:0 auto;max-width:1000px">
-      <thead><tr>
+      <thead id="rankThead"><tr>
         <th>#</th><th>Node</th><th>Regional</th><th>Grupo</th>
-        <th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>
-        <th>OTD Gap</th><th>CPT Gap</th><th>Score</th>
+        <th>Stow Gap</th><th>Recv Gap</th><th>Dep Gap</th>
+        <th>Volume</th><th>PPP</th><th>Score</th>
       </tr></thead>
       <tbody id="rankTable"></tbody>
     </table>
