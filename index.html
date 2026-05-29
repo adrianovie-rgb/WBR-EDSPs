@@ -129,6 +129,14 @@ tr:hover{background:#f8fafc}
   <div class="filter-group">
     <label>Semana:</label>
     <select id="filtroSemana"></select>
+<div class="filter-group" style="margin-left:18px;">
+  <label>MODO</label>
+  <select id="selModo" onchange="trocarModo()">
+    <option value="node" selected>Node</option>
+    <option value="grupo">Grupo</option>
+    <option value="regional">Regional</option>
+  </select>
+</div>
   </div>
 </div>
 
@@ -579,61 +587,232 @@ function buildLegend(legendId, filteredNodes) {
 }
 
 // ============================================================
+// MODO DE VISUALIZACAO: Node / Grupo / Regional
+// ============================================================
+
+function getModo() {
+  var sel = document.getElementById("selModo");
+  return sel ? sel.value : "node";
+}
+
+function getDataByModo() {
+  var modo = getModo();
+  var result = { items: {}, semanas: D.semanas, metas: D.metas };
+  if      (modo === "node")     result.items = D.nodes;
+  else if (modo === "grupo")    result.items = D.grupos;
+  else if (modo === "regional") result.items = D.regionais;
+  return result;
+}
+
+function getItemList() {
+  var modo = getModo();
+  var source;
+  if      (modo === "node")     source = D.nodes;
+  else if (modo === "grupo")    source = D.grupos;
+  else                          source = D.regionais;
+  return Object.keys(source);
+}
+
+function getItemMetrics(itemName, semana) {
+  var modo = getModo();
+  var source;
+  if      (modo === "node")     source = D.nodes;
+  else if (modo === "grupo")    source = D.grupos;
+  else                          source = D.regionais;
+  if (!source[itemName] || !source[itemName].semanas ||
+      !source[itemName].semanas[semana]) {
+    return null;
+  }
+  return source[itemName].semanas[semana];
+}
+
+function getItemInfo(itemName) {
+  var modo = getModo();
+  if (modo === "node" && D.nodes[itemName]) {
+    return {
+      regional: D.nodes[itemName].regional,
+      grupo:    D.nodes[itemName].grupo,
+      tipo:     D.nodes[itemName].tipo
+    };
+  } else if (modo === "grupo" && D.grupos[itemName]) {
+    return { regional: D.grupos[itemName].regional,
+             grupo: itemName, tipo: "-" };
+  } else if (modo === "regional") {
+    return { regional: itemName, grupo: "-", tipo: "-" };
+  }
+  return { regional: "-", grupo: "-", tipo: "-" };
+}
+
+function atualizarFiltros() {
+  var modo     = getModo();
+  var selGrupo = document.getElementById("filtroGrupo");
+  var selNode  = document.getElementById("filtroNode");
+
+  // Limpar opcoes atuais
+  selGrupo.innerHTML = '<option value="todos">Todos</option>';
+  selNode.innerHTML  = '<option value="todos">Todos</option>';
+
+  if (modo === "node") {
+    // Modo atual: popula grupos e nodes normalmente
+    selGrupo.disabled = false;
+    selNode.disabled  = false;
+    var gruposSet = {};
+    Object.keys(D.nodes).sort().forEach(function(nd) {
+      var g = D.nodes[nd].grupo;
+      if (g && !gruposSet[g]) {
+        gruposSet[g] = true;
+        var opt = document.createElement("option");
+        opt.value = g; opt.textContent = g;
+        selGrupo.appendChild(opt);
+      }
+      var opt2 = document.createElement("option");
+      opt2.value = nd; opt2.textContent = nd;
+      selNode.appendChild(opt2);
+    });
+
+  } else if (modo === "grupo") {
+    // Modo Grupo: dropdown NODE mostra grupos, GRUPO desativado
+    selGrupo.disabled = true;
+    selNode.disabled  = false;
+    Object.keys(D.grupos).sort().forEach(function(grp) {
+      var opt = document.createElement("option");
+      opt.value = grp; opt.textContent = grp;
+      selNode.appendChild(opt);
+    });
+
+  } else if (modo === "regional") {
+    // Modo Regional: dropdown NODE mostra regionais, GRUPO desativado
+    selGrupo.disabled = true;
+    selNode.disabled  = false;
+    Object.keys(D.regionais).sort().forEach(function(reg) {
+      var opt = document.createElement("option");
+      opt.value = reg; opt.textContent = reg;
+      selNode.appendChild(opt);
+    });
+  }
+}
+
+// --- Atualizar getFilteredNodes() para respeitar o modo ---
+function getFilteredNodes() {
+  var modo  = getModo();
+  var grupo = document.getElementById("filtroGrupo").value;
+  var item  = document.getElementById("filtroNode").value;
+
+  if (modo === "node") {
+    // Comportamento original
+    if (item !== "todos") {
+      return EXCLUDE_NODES.indexOf(item) === -1 ? [item] : [];
+    }
+    var list;
+    if (grupo !== "todos") {
+      list = Object.keys(D.nodes).filter(function(nd) {
+        return D.nodes[nd].grupo === grupo;
+      });
+    } else {
+      list = Object.keys(D.nodes).sort();
+    }
+    return list.filter(function(nd) {
+      return EXCLUDE_NODES.indexOf(nd) === -1;
+    });
+
+  } else if (modo === "grupo") {
+    if (item !== "todos") return [item];
+    return Object.keys(D.grupos).sort();
+
+  } else if (modo === "regional") {
+    if (item !== "todos") return [item];
+    return Object.keys(D.regionais).sort();
+  }
+  return [];
+}
+       
+// ============================================================
 // RESUMO
 // ============================================================
 function renderResumo() {
-  var filtered = getFilteredNodes();
-  var sem = document.getElementById("filtroSemana").value;
-  var recvVals=[],stowVals=[],depVals=[],pppVals=[];
-  filtered.forEach(function(nd) {
-    var d = getNodeData(nd, sem);
-    if (!d) return;
-    if (d.receive!==null) recvVals.push(normPct(d.receive));
-    if (d.stow!==null)    stowVals.push(normPct(d.stow));
-    if (d.depart!==null)  depVals.push(normPct(d.depart));
-    if (d.ppp!==null)     pppVals.push(Number(d.ppp));
+  var filtrados = getFilteredNodes();  // ja respeita o modo
+  var sem       = document.getElementById("filtroSemana").value;
+  var modo      = getModo();
+
+  // --- KPI Cards (media dos itens filtrados) ---
+  var recvVals=[], stowVals=[], depVals=[], pppVals=[];
+  filtrados.forEach(function(item) {
+    var m = getItemMetrics(item, sem);
+    if (!m) return;
+    if (m.recv !== null) recvVals.push(normPct(m.recv));
+    if (m.stow !== null) stowVals.push(normPct(m.stow));
+    if (m.dep  !== null) depVals.push(normPct(m.dep));
+    if (m.ppp  !== null && m.ppp > 0) pppVals.push(Number(m.ppp));
   });
-  var avg=function(a){return a.length>0?a.reduce(function(x,y){return x+y;},0)/a.length:null;};
-  var avgRecv=avg(recvVals),avgStow=avg(stowVals),avgDep=avg(depVals),avgPpp=avg(pppVals);
+  var avg = function(a) {
+    return a.length > 0 ? a.reduce(function(x,y){return x+y;},0)/a.length : null;
+  };
+  var avgRecv = avg(recvVals), avgStow = avg(stowVals);
+  var avgDep  = avg(depVals),  avgPpp  = avg(pppVals);
 
-  function kpiCard(title, val, target, unit) {
-    var display=val!==null?val.toFixed(2)+unit:"-";
-    var cls=val!==null?(val>=target?"target-met":val>=target*0.98?"":"target-miss"):"";
-    var vCls=val!==null?(val>=target?"ok":val>=target*0.98?"warn":"miss"):"";
-    return '<div class="kpi-card '+cls+'"><h4>'+title+'</h4>'
-      +'<div class="value '+vCls+'">'+display+'</div>'
-      +'<div class="detail">Meta: '+target+unit+'</div></div>';
+  // KPI Cards (inalterado visualmente)
+  var grid = document.getElementById("resumoKpiGrid");
+  grid.innerHTML =
+    kpiCard("Receive %",   avgRecv, 98.5, "%") +
+    kpiCard("Stow %",      avgStow, 99.5, "%") +
+    kpiCard("Departure %", avgDep,  99.5, "%") +
+    kpiCard("PPP Medio",   avgPpp,  175,  "");
+
+  // --- Cabecalho da tabela (dinamico por modo) ---
+  var th = document.getElementById("resumoThead");
+  var tb = document.getElementById("resumoTbody");
+
+  if (modo === "node") {
+    th.innerHTML = '<tr><th>Node</th><th>Grupo</th><th>Tipo</th>' +
+      '<th>Volume</th><th>Receive %</th><th>Stow %</th>' +
+      '<th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
+  } else if (modo === "grupo") {
+    th.innerHTML = '<tr><th>Grupo</th><th>Regional</th>' +
+      '<th>Volume</th><th>Receive %</th><th>Stow %</th>' +
+      '<th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
+  } else {
+    th.innerHTML = '<tr><th>Regional</th>' +
+      '<th>Volume</th><th>Receive %</th><th>Stow %</th>' +
+      '<th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
   }
-  var grid=document.getElementById("resumoKpiGrid");
-  grid.style.gridTemplateColumns="repeat(4,1fr)";
-  grid.innerHTML=kpiCard("Receive %",avgRecv,98.5,"%")
-    +kpiCard("Stow %",avgStow,99.5,"%")
-    +kpiCard("Departure %",avgDep,99.5,"%")
-    +kpiCard("PPP Medio",avgPpp,175,"");
 
-  var th=document.getElementById("resumoThead");
-  var tb=document.getElementById("resumoTbody");
-  th.innerHTML='<tr><th>Node</th><th>Regional</th><th>Grupo</th><th>Tipo</th>'
-    +'<th>Volume</th><th>Receive %</th><th>Stow %</th><th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
-  tb.innerHTML=filtered.map(function(nd) {
-    var d=getNodeData(nd,sem); if(!d) return "";
-    var cfg=D.nodes[nd];
-    var d1s=cfg&&cfg.d1_stow?'<span class="badge-d1">D+1 Stow</span>':"";
-    var d1d=cfg&&cfg.d1_dep?'<span class="badge-d1">D+1 Dep</span>':"";
-    var rv=normPct(d.receive),sv=normPct(d.stow),dv=normPct(d.depart);
-    return '<tr>'
-      +'<td><span class="node-tag" style="background:'+nodeColor(nd)+'22;color:'+nodeColor(nd)+'">'+nd+'</span>'+d1s+d1d+'</td>'
-      +'<td>'+( cfg?cfg.regional:"")+'</td>'
-      +'<td>'+( cfg?cfg.grupo:"")+'</td>'
-      +'<td>'+( cfg?cfg.tipo:"")+'</td>'
-      +'<td>'+fmtNum(d.volume,0)+'</td>'
-      +'<td class="'+cellClass(rv,98.5)+'">'+( rv!==null?rv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+cellClass(sv,99.5)+'">'+( sv!==null?sv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+cellClass(dv,99.5)+'">'+( dv!==null?dv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+( d.ppp>=175?"ok":d.ppp>=160?"warn":"miss")+'">'+fmtNum(d.ppp,1)+'</td>'
-      +'<td>'+fmtNum(d.backlog,0)+'</td></tr>';
+  // --- Linhas da tabela ---
+  tb.innerHTML = filtrados.map(function(item) {
+    var m    = getItemMetrics(item, sem);
+    var info = getItemInfo(item);
+    if (!m) return "";
+
+    var rv = normPct(m.recv);
+    var sv = normPct(m.stow);
+    var dv = normPct(m.dep);
+
+    var label;
+    if (modo === "node") {
+      var cfg = D.nodes[item];
+      var d1s = cfg && cfg.d1_stow ? '<span class="badge-d1">D+1 Stow</span>' : "";
+      var d1d = cfg && cfg.d1_dep  ? '<span class="badge-d1">D+1 Dep</span>'  : "";
+      label = '<td><span class="node-tag" style="background:' +
+        nodeColor(item) + '22;color:' + nodeColor(item) + '">' +
+        item + '</span>' + d1s + d1d + '</td>' +
+        '<td>' + info.grupo + '</td><td>' + info.tipo + '</td>';
+    } else if (modo === "grupo") {
+      label = '<td><b>' + item + '</b></td><td>' + info.regional + '</td>';
+    } else {
+      label = '<td><b>' + item + '</b></td>';
+    }
+
+    return '<tr>' + label +
+      '<td>' + fmtNum(m.vol, 0) + '</td>' +
+      '<td class="' + cellClass(rv,98.5,true) + '">' + (rv!==null?rv.toFixed(2)+"%":"-") + '</td>' +
+      '<td class="' + cellClass(sv,99.5,true) + '">' + (sv!==null?sv.toFixed(2)+"%":"-") + '</td>' +
+      '<td class="' + cellClass(dv,99.5,true) + '">' + (dv!==null?dv.toFixed(2)+"%":"-") + '</td>' +
+      '<td class="' + (m.ppp>=175?"ok":m.ppp>=160?"warn":"miss") + '">' +
+        (m.ppp ? fmtNum(m.ppp,1) : "-") + '</td>' +
+      '<td>' + fmtNum(m.back, 0) + '</td>' +
+      '</tr>';
   }).join("");
 }
+
 
 // ============================================================
 // PPP
