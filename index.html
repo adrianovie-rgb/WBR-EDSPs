@@ -814,108 +814,232 @@ function renderTendencia() {
   }
 }
 
+
 // ============================================================
-// RANKING: podium ouro/prata/bronze + confetti + tabela com Regional
-// Score = avg gaps (Recv-98.5, Stow-99.5, Dep-99.5)
+// RANKING (Node / Grupo / Regional)
+// Score = avg gaps ponderado por volume (Stow-99.5, Recv-98.5, Dep-99.5)
+// Desempate: Stow > Receive > Departure > Volume > PPP
 // ============================================================
-function renderRanking() {
-  var filtered=getFilteredNodes();
-  var sem=document.getElementById("filtroSemana").value;
-  var scores=filtered.map(function(nd) {
-    var d=getNodeData(nd,sem); var ex=getExtras(nd,sem);
+var rankMode = "node";
+window.setRankMode = function(mode) {
+  rankMode = mode;
+  document.getElementById("btnRankNode").classList.toggle("active", mode === "node");
+  document.getElementById("btnRankGrupo").classList.toggle("active", mode === "grupo");
+  document.getElementById("btnRankRegional").classList.toggle("active", mode === "regional");
+  renderRanking();
+};
+
+function computeNodeScores(filtered, sem) {
+  return filtered.map(function(nd) {
+    var d = getNodeData(nd, sem);
     if (!d) return null;
-    var rv=normPct(d.receive)||0, sv=normPct(d.stow)||0, dv=normPct(d.depart)||0;
-    var rd=rv-98.5, sd=sv-99.5, dd=dv-99.5;
-    var ov=ex?normPct(ex.otd):null, cv=ex?normPct(ex.cpt):null;
-    var od=ov!==null?ov-100:null, cd=cv!==null?cv-100:null;
-    var comps=[rd,sd,dd];
-    if (od!==null) comps.push(od);
-    if (cd!==null) comps.push(cd);
-    var score=comps.reduce(function(a,b){return a+b;},0)/comps.length;
-    return {node:nd,score:score,ppp:d.ppp||0,vol:d.volume||0,
-            regional:D.nodes[nd]?D.nodes[nd].regional:"",
-            grupo:D.nodes[nd]?D.nodes[nd].grupo:"",
-            rd:rd,sd:sd,dd:dd,od:od,cd:cd};
-  }).filter(function(x){return x!==null;});
+    var rv = normPct(d.receive) || 0;
+    var sv = normPct(d.stow) || 0;
+    var dv = normPct(d.depart) || 0;
+    var vol = Number(d.volume) || 0;
+    var ppp = (d.ppp !== null && d.ppp !== undefined) ? Number(d.ppp) : 0;
 
-  scores.sort(function(a,b) {
-    if (Math.abs(b.score-a.score)>0.001) return b.score-a.score;
-    if (Math.abs(b.sd-a.sd)>0.001) return b.sd-a.sd;
-    if (Math.abs(b.rd-a.rd)>0.001) return b.rd-a.rd;
-    if (Math.abs(b.dd-a.dd)>0.001) return b.dd-a.dd;
-    if (b.vol!==a.vol) return b.vol-a.vol;
-    return b.ppp-a.ppp;
-  });
+    var rd = rv - 98.5;
+    var sd = sv - 99.5;
+    var dd = dv - 99.5;
+    var score = (rd + sd + dd) / 3;
 
-  var container=document.getElementById("podiumContainer");
-  container.innerHTML="";
-  var medals=["🥇","🥈","🥉"];
-
-  function buildPodiumBlock(s,medal) {
-    return '<div class="podium-block">'
-      +'<div class="podium-medal">'+medal+'</div>'
-      +'<div class="podium-node">'+s.node+'</div>'
-      +'<div class="podium-score">'+( s.score>=0?"+":"")+s.score.toFixed(2)+' pp</div>'
-      +'<div class="podium-ppp">PPP: '+( s.ppp?Number(s.ppp).toFixed(0):"--")+'</div>'
-      +'</div>';
-  }
-
-  if (scores.length===0) {
-    container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados.</p>';
-  } else if (scores.length===1) {
-    var el=document.createElement("div"); el.className="podium-item podium-1st";
-    el.innerHTML=buildPodiumBlock(scores[0],medals[0]); container.appendChild(el);
-  } else if (scores.length===2) {
-    [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x[1];
-      el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
-    });
-  } else {
-    [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]],[scores[2],"podium-3rd",medals[2]]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x[1];
-      el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
-    });
-  }
-
-  // Tabela com coluna Regional
-  var tbody=document.getElementById("rankTable");
-  tbody.innerHTML=scores.map(function(s,i) {
-    function fmtGap(v){return v===null?"-":(v>=0?"+":"")+v.toFixed(2);}
-    return '<tr>'
-      +'<td><b>'+( i+1)+'</b></td>'
-      +'<td><span class="node-tag" style="background:'+nodeColor(s.node)+'22;color:'+nodeColor(s.node)+'">'+s.node+'</span></td>'
-      +'<td>'+s.regional+'</td>'
-      +'<td>'+s.grupo+'</td>'
-      +'<td class="'+( s.rd>=0?"ok":"miss")+'">'+fmtGap(s.rd)+'</td>'
-      +'<td class="'+( s.sd>=0?"ok":"miss")+'">'+fmtGap(s.sd)+'</td>'
-      +'<td class="'+( s.dd>=0?"ok":"miss")+'">'+fmtGap(s.dd)+'</td>'
-      +'<td class="'+( s.od!==null?s.od>=0?"ok":"miss":"")+'">'+fmtGap(s.od)+'</td>'
-      +'<td class="'+( s.cd!==null?s.cd>=0?"ok":"miss":"")+'">'+fmtGap(s.cd)+'</td>'
-      +'<td><b>'+( s.score>=0?"+":"")+s.score.toFixed(2)+' pp</b></td>'
-      +'</tr>';
-  }).join("");
-
-  setTimeout(function(){launchConfetti();},600);
+    return {
+      node: nd, score: score, vol: vol, ppp: ppp,
+      regional: D.nodes[nd] ? D.nodes[nd].regional : "",
+      grupo: D.nodes[nd] ? D.nodes[nd].grupo : "",
+      rd: rd, sd: sd, dd: dd
+    };
+  }).filter(function(x) { return x !== null && x.vol > 0; });
 }
 
-// Confetti animation
+function sortByTiebreaker(arr) {
+  arr.sort(function(a, b) {
+    if (Math.abs(b.score - a.score) > 0.001) return b.score - a.score;
+    if (Math.abs(b.sd - a.sd) > 0.001) return b.sd - a.sd;
+    if (Math.abs(b.rd - a.rd) > 0.001) return b.rd - a.rd;
+    if (Math.abs(b.dd - a.dd) > 0.001) return b.dd - a.dd;
+    if (b.vol !== a.vol) return b.vol - a.vol;
+    return b.ppp - a.ppp;
+  });
+  return arr;
+}
+
+function aggregateByKey(nodeScores, keyFn) {
+  var groups = {};
+  nodeScores.forEach(function(ns) {
+    var key = keyFn(ns);
+    if (!groups[key]) groups[key] = { key: key, totalVol: 0, wRd: 0, wSd: 0, wDd: 0, totalPpp: 0, pppVol: 0 };
+    var g = groups[key];
+    g.totalVol += ns.vol;
+    g.wRd += ns.rd * ns.vol;
+    g.wSd += ns.sd * ns.vol;
+    g.wDd += ns.dd * ns.vol;
+    if (ns.ppp > 0) {
+      g.totalPpp += ns.ppp * ns.vol;
+      g.pppVol += ns.vol;
+    }
+  });
+  return Object.keys(groups).map(function(key) {
+    var g = groups[key];
+    var vol = g.totalVol || 1;
+    var rd = g.wRd / vol;
+    var sd = g.wSd / vol;
+    var dd = g.wDd / vol;
+    var score = (rd + sd + dd) / 3;
+    var ppp = g.pppVol > 0 ? g.totalPpp / g.pppVol : 0;
+    return { node: key, score: score, vol: g.totalVol, ppp: ppp, rd: rd, sd: sd, dd: dd, regional: "", grupo: "" };
+  });
+}
+
+function renderRanking() {
+  var filtered = getFilteredNodes();
+  var sem = document.getElementById("filtroSemana").value;
+  var nodeScores = computeNodeScores(filtered, sem);
+
+  var container = document.getElementById("podiumContainer");
+  var tbody = document.getElementById("rankTable");
+  var thead = document.getElementById("rankThead");
+  if (!thead) {
+    var tbl = tbody.parentElement;
+    thead = document.createElement("thead");
+    thead.id = "rankThead";
+    tbl.insertBefore(thead, tbody);
+  }
+
+  if (rankMode === "node") {
+    var scores = sortByTiebreaker(nodeScores);
+    renderPodium(container, scores);
+    thead.innerHTML = '<tr><th>#</th><th>Node</th><th>Regional</th><th>Grupo</th>'
+      + '<th>Stow Gap</th><th>Recv Gap</th><th>Dep Gap</th><th>Volume</th><th>PPP</th><th>Score</th></tr>';
+    tbody.innerHTML = scores.map(function(s, i) {
+      return rankRow(i + 1, s.node, s.regional, s.grupo, s);
+    }).join("");
+  }
+  else if (rankMode === "grupo") {
+    var grupoScores = aggregateByKey(nodeScores, function(ns) { return ns.grupo; });
+    grupoScores = sortByTiebreaker(grupoScores);
+    renderPodium(container, grupoScores);
+    thead.innerHTML = '<tr><th>#</th><th>Grupo</th><th>Stow Gap</th><th>Recv Gap</th>'
+      + '<th>Dep Gap</th><th>Volume Total</th><th>PPP Medio</th><th>Score</th></tr>';
+    tbody.innerHTML = grupoScores.map(function(s, i) {
+      return rankRowGrupo(i + 1, s);
+    }).join("");
+  }
+  else if (rankMode === "regional") {
+    var regScores = aggregateByKey(nodeScores, function(ns) { return ns.regional; });
+    regScores = sortByTiebreaker(regScores);
+    container.innerHTML = "";
+    thead.innerHTML = '<tr><th>#</th><th>Regional</th><th>Stow Gap</th><th>Recv Gap</th>'
+      + '<th>Dep Gap</th><th>Volume Total</th><th>PPP Medio</th><th>Score</th></tr>';
+    tbody.innerHTML = regScores.map(function(s, i) {
+      return rankRowGrupo(i + 1, s);
+    }).join("");
+  }
+
+  if (rankMode !== "regional") {
+    setTimeout(function() { launchConfetti(); }, 600);
+  }
+}
+
+function renderPodium(container, scores) {
+  container.innerHTML = "";
+  var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
+
+  if (scores.length === 0) {
+    container.innerHTML = '<p style="color:#64748b;padding:40px">Sem dados para o periodo selecionado.</p>';
+    return;
+  }
+  if (scores.length === 1) {
+    container.style.justifyContent = "center";
+    var item1 = document.createElement("div");
+    item1.className = "podium-item podium-1st";
+    item1.innerHTML = buildPodiumBlock(scores[0], medals[0]);
+    container.appendChild(item1);
+    return;
+  }
+  if (scores.length === 2) {
+    container.style.justifyContent = "center";
+    [[scores[1], "podium-2nd", medals[1]], [scores[0], "podium-1st", medals[0]]].forEach(function(x) {
+      var el = document.createElement("div");
+      el.className = "podium-item " + x[1];
+      el.innerHTML = buildPodiumBlock(x[0], x[2]);
+      container.appendChild(el);
+    });
+    return;
+  }
+  container.style.justifyContent = "";
+  [[scores[1], "podium-2nd", medals[1]], [scores[0], "podium-1st", medals[0]], [scores[2], "podium-3rd", medals[2]]].forEach(function(x) {
+    var el = document.createElement("div");
+    el.className = "podium-item " + x[1];
+    el.innerHTML = buildPodiumBlock(x[0], x[2]);
+    container.appendChild(el);
+  });
+}
+
+function buildPodiumBlock(s, medal) {
+  return '<div class="podium-block">'
+    + '<div class="podium-medal">' + medal + '</div>'
+    + '<div class="podium-node">' + s.node + '</div>'
+    + '<div class="podium-score">' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + ' pp</div>'
+    + '<div class="podium-ppp">Vol: ' + (s.vol ? Number(s.vol).toLocaleString() : "--") + '</div>'
+    + '</div>';
+}
+
+function rankRow(pos, node, regional, grupo, s) {
+  function fmtGap(v) { return (v >= 0 ? "+" : "") + v.toFixed(2); }
+  var sdCls = s.sd >= 0 ? "ok" : "miss";
+  var rdCls = s.rd >= 0 ? "ok" : "miss";
+  var ddCls = s.dd >= 0 ? "ok" : "miss";
+  return '<tr>'
+    + '<td><b>' + pos + '</b></td>'
+    + '<td><span class="node-tag" style="background:' + nodeColor(node) + '22;color:' + nodeColor(node) + '">' + node + '</span></td>'
+    + '<td>' + regional + '</td>'
+    + '<td>' + grupo + '</td>'
+    + '<td class="' + sdCls + '">' + fmtGap(s.sd) + '</td>'
+    + '<td class="' + rdCls + '">' + fmtGap(s.rd) + '</td>'
+    + '<td class="' + ddCls + '">' + fmtGap(s.dd) + '</td>'
+    + '<td>' + Number(s.vol).toLocaleString() + '</td>'
+    + '<td>' + (s.ppp > 0 ? s.ppp.toFixed(1) : "-") + '</td>'
+    + '<td><b>' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + ' pp</b></td>'
+    + '</tr>';
+}
+
+function rankRowGrupo(pos, s) {
+  function fmtGap(v) { return (v >= 0 ? "+" : "") + v.toFixed(2); }
+  var sdCls = s.sd >= 0 ? "ok" : "miss";
+  var rdCls = s.rd >= 0 ? "ok" : "miss";
+  var ddCls = s.dd >= 0 ? "ok" : "miss";
+  return '<tr>'
+    + '<td><b>' + pos + '</b></td>'
+    + '<td><b>' + s.node + '</b></td>'
+    + '<td class="' + sdCls + '">' + fmtGap(s.sd) + '</td>'
+    + '<td class="' + rdCls + '">' + fmtGap(s.rd) + '</td>'
+    + '<td class="' + ddCls + '">' + fmtGap(s.dd) + '</td>'
+    + '<td>' + Number(s.vol).toLocaleString() + '</td>'
+    + '<td>' + (s.ppp > 0 ? s.ppp.toFixed(1) : "-") + '</td>'
+    + '<td><b>' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + ' pp</b></td>'
+    + '</tr>';
+}
+
 function launchConfetti() {
-  var colors=["#f59e0b","#3b82f6","#10b981","#ef4444","#8b5cf6","#ec4899"];
-  var wrapper=document.createElement("div");
-  wrapper.className="confetti"; document.body.appendChild(wrapper);
-  for (var i=0; i<80; i++) {
-    var piece=document.createElement("div");
-    piece.className="confetti-piece";
-    piece.style.left=Math.random()*100+"%";
-    piece.style.animationDelay=(Math.random()*2)+"s";
-    piece.style.animationDuration=(2+Math.random()*2)+"s";
-    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
-    piece.style.borderRadius=Math.random()>0.5?"50%":"0";
-    piece.style.width=(6+Math.random()*8)+"px";
-    piece.style.height=(6+Math.random()*8)+"px";
+  var colors = ["#f59e0b", "#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#ec4899"];
+  var wrapper = document.createElement("div");
+  wrapper.className = "confetti";
+  document.body.appendChild(wrapper);
+  for (var i = 0; i < 80; i++) {
+    var piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random() * 100 + "%";
+    piece.style.animationDelay = (Math.random() * 2) + "s";
+    piece.style.animationDuration = (2 + Math.random() * 2) + "s";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.borderRadius = Math.random() > 0.5 ? "50%" : "0";
+    piece.style.width = (6 + Math.random() * 8) + "px";
+    piece.style.height = (6 + Math.random() * 8) + "px";
     wrapper.appendChild(piece);
   }
-  setTimeout(function(){wrapper.remove();},4200);
+  setTimeout(function() { wrapper.remove(); }, 4200);
 }
 
 // ============================================================
