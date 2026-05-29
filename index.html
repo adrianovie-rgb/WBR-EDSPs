@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -114,7 +115,7 @@ tr:hover{background:#f8fafc}
     <span id="lastUpdateSpan">Carregando...</span>
   </div>
 </header>
- 
+
 <div class="filters-bar">
   <div class="filter-group">
     <label>Grupo:</label>
@@ -129,7 +130,7 @@ tr:hover{background:#f8fafc}
     <select id="filtroSemana"></select>
   </div>
 </div>
- 
+
 <div class="tabs" id="tabBar">
   <button class="tab active" data-tab="resumo">Resumo</button>
   <button class="tab" data-tab="ppp">PPP</button>
@@ -141,13 +142,13 @@ tr:hover{background:#f8fafc}
   <button class="tab" data-tab="tendencia">Tendencia</button>
   <button class="tab" data-tab="ranking">Ranking</button>
 </div>
- 
+
 <div class="panel active" id="panel-resumo">
   <div class="section-title">Resumo de Performance</div>
   <div class="kpi-grid" id="resumoKpiGrid"></div>
   <table><thead id="resumoThead"></thead><tbody id="resumoTbody"></tbody></table>
 </div>
- 
+
 <div class="panel" id="panel-ppp">
   <div class="section-title">Packages Per Pallet (PPP)</div>
   <div class="chart-container">
@@ -158,7 +159,7 @@ tr:hover{background:#f8fafc}
   </div>
   <table><thead id="pppThead"></thead><tbody id="pppTbody"></tbody></table>
 </div>
- 
+
 <div class="panel" id="panel-receive">
   <div class="section-title">Receive Success %</div>
   <div class="kpi-grid" id="receiveKpiGrid"></div>
@@ -169,7 +170,7 @@ tr:hover{background:#f8fafc}
     <svg id="recvChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
- 
+
 <div class="panel" id="panel-stow">
   <div class="section-title">Stow Success % (D+1 aplicado: ESE8, ECB8)</div>
   <div class="kpi-grid" id="stowKpiGrid"></div>
@@ -180,7 +181,7 @@ tr:hover{background:#f8fafc}
     <svg id="stowChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
- 
+
 <div class="panel" id="panel-departure">
   <div class="section-title">Departure Success % (D+1 aplicado: EUM8, EME8)</div>
   <div class="kpi-grid" id="depKpiGrid"></div>
@@ -191,7 +192,7 @@ tr:hover{background:#f8fafc}
     <svg id="depChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
- 
+
 <div class="panel" id="panel-otd">
   <div class="section-title">OTD - On Time Delivery</div>
   <div class="kpi-grid" id="otdKpiGrid"></div>
@@ -202,7 +203,7 @@ tr:hover{background:#f8fafc}
     <svg id="otdChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
- 
+
 <div class="panel" id="panel-cpt">
   <div class="section-title">CPT - Critical Pull Time</div>
   <div class="kpi-grid" id="cptKpiGrid"></div>
@@ -213,7 +214,7 @@ tr:hover{background:#f8fafc}
     <svg id="cptChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
- 
+
 <div class="panel" id="panel-tendencia">
   <div class="section-title">Tendencia</div>
   <div class="trend-toggle">
@@ -222,7 +223,7 @@ tr:hover{background:#f8fafc}
   </div>
   <div id="tendenciaContent"></div>
 </div>
- 
+
 <div class="panel" id="panel-ranking">
   <div class="section-title">Ranking - Performance Consolidada</div>
   <p style="font-size:.85rem;color:#64748b;margin-bottom:12px">
@@ -242,7 +243,7 @@ tr:hover{background:#f8fafc}
   </div>
 </div>
 </div>
- 
+
 <script src="data.js"></script>
 <script>
 (function(){
@@ -261,7 +262,7 @@ var EXCLUDE_NODES = ["EOZ8"];
 // ============================================================
 // HELPERS
 // ============================================================
- 
+
 function fmtPct(v) {
   if (v === null || v === undefined) return "-";
   var n = Number(v);
@@ -269,12 +270,12 @@ function fmtPct(v) {
   var pct = n > 1 ? n : n * 100;
   return pct.toFixed(2) + "%";
 }
- 
+
 function fmtNum(v, dec) {
   if (v === null || v === undefined) return "-";
   return Number(v).toFixed(dec !== undefined ? dec : 1);
 }
- 
+
 function cellClass(val, target, higherBetter) {
   if (val === null || val === undefined) return "";
   var n = Number(val) > 1 ? Number(val) : Number(val) * 100;
@@ -285,25 +286,25 @@ function cellClass(val, target, higherBetter) {
   }
   return n <= target ? "ok" : (n <= target * 1.02 ? "warn" : "miss");
 }
- 
+
 function nodeColor(nd) { return NODE_COLORS[nd] || "#64748b"; }
- 
+
 function getNodeData(nd, sem) {
   if (!D.nodes[nd] || !D.nodes[nd].semanas) return null;
   return D.nodes[nd].semanas[sem] || null;
 }
- 
+
 function getExtras(nd, sem) {
   if (!D.extras || !D.extras[nd]) return null;
   return D.extras[nd][sem] || null;
 }
- 
+
 function normPct(v) {
   if (v === null || v === undefined) return null;
   var n = Number(v);
   return isNaN(n) ? null : (n > 1 ? n : n * 100);
 }
- 
+
 function getFilteredNodes() {
   var grupo = document.getElementById("filtroGrupo").value;
   var node  = document.getElementById("filtroNode").value;
@@ -316,12 +317,12 @@ function getFilteredNodes() {
   }
   return list.filter(function(nd){ return EXCLUDE_NODES.indexOf(nd) === -1; });
 }
- 
+
 // ============================================================
-// CHART RENDERING — PILL-LABELS ONLY ON LAST POINT
+// CHART RENDERING — LABELS EM TODAS AS MARCACOES
 // Collision detection robusta com 12 posicoes + fallback progressivo
 // ============================================================
- 
+
 function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel, isPercent) {
   var svg = document.getElementById(svgId);
   if (!svg) return;
@@ -329,7 +330,7 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
   var W=900, H=300;
   var chartW = W - PAD_L - PAD_R;
   var chartH = H - PAD_T - PAD_B;
- 
+
   var allVals = [];
   filteredNodes.forEach(function(nd) {
     semanas.forEach(function(sem) {
@@ -342,7 +343,7 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     svg.innerHTML = '<text x="450" y="150" text-anchor="middle" fill="#64748b" font-size="14">Sem dados</text>';
     return;
   }
- 
+
   var minVal = Math.min.apply(null, allVals);
   var maxVal = Math.max.apply(null, allVals);
   var range = maxVal - minVal;
@@ -351,12 +352,12 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
   minVal -= pad;
   maxVal += pad;
   range = maxVal - minVal;
- 
+
   function xPos(sIdx) { return PAD_L + (sIdx / Math.max(semanas.length - 1, 1)) * chartW; }
   function yPos(v) { return PAD_T + chartH - ((v - minVal) / range) * chartH; }
- 
+
   var html = "";
- 
+
   // Grid lines
   for (var gi = 0; gi <= 4; gi++) {
     var gv = minVal + (range / 4) * gi;
@@ -365,42 +366,42 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     html += '<line x1="' + PAD_L + '" y1="' + gy + '" x2="' + (W - PAD_R) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="1"/>';
     html += '<text x="' + (PAD_L - 6) + '" y="' + (gy + 4) + '" font-size="9" fill="#64748b" text-anchor="end">' + label + '</text>';
   }
- 
+
   // X axis labels
   semanas.forEach(function(sem, si) {
     var x = xPos(si);
     html += '<text x="' + x + '" y="' + (H - PAD_B + 16) + '" font-size="10" fill="#64748b" text-anchor="middle">' + sem + '</text>';
   });
- 
+
   // Meta line
   if (meta !== null && meta !== undefined) {
     var my = yPos(meta);
     html += '<line x1="' + PAD_L + '" y1="' + my + '" x2="' + (W - PAD_R) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
     html += '<text x="' + (W - PAD_R + 4) + '" y="' + (my + 4) + '" font-size="9" fill="#ef4444" font-weight="600">' + (metaLabel || "Meta") + '</text>';
   }
- 
+
   // Collision detection system
   var placedLabels = [];
- 
+
   function rectOverlap(a, b) {
     return !(a.x + a.w + 2 < b.x || b.x + b.w + 2 < a.x ||
              a.y + a.h + 2 < b.y || b.y + b.h + 2 < a.y);
   }
- 
+
   function findFreePos(cx, cy, lw, lh) {
     var offsets = [
-      { dx: 8,       dy: -lh/2 },
-      { dx: 8,       dy: -lh - 2 },
-      { dx: 8,       dy: 4 },
-      { dx: -lw - 8, dy: -lh/2 },
-      { dx: -lw - 8, dy: -lh - 2 },
-      { dx: -lw - 8, dy: 4 },
-      { dx: -lw/2,   dy: -lh - 10 },
-      { dx: -lw/2,   dy: 10 },
-      { dx: 14,      dy: -lh - 8 },
-      { dx: 14,      dy: 10 },
-      { dx: -lw - 14, dy: -lh - 8 },
-      { dx: -lw - 14, dy: 10 }
+      { dx: -lw/2, dy: -lh - 6 },
+      { dx: -lw/2, dy: 8 },
+      { dx: 6,     dy: -lh/2 },
+      { dx: -lw-6, dy: -lh/2 },
+      { dx: 6,     dy: -lh - 4 },
+      { dx: -lw-6, dy: -lh - 4 },
+      { dx: 6,     dy: 4 },
+      { dx: -lw-6, dy: 4 },
+      { dx: -lw/2, dy: -lh - 14 },
+      { dx: -lw/2, dy: 14 },
+      { dx: 12,    dy: -lh - 8 },
+      { dx: -lw-12,dy: -lh - 8 }
     ];
     for (var oi = 0; oi < offsets.length; oi++) {
       var rx = cx + offsets[oi].dx;
@@ -416,12 +417,12 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
     }
     // Progressive fallback
     for (var att = 0; att < 20; att++) {
-      var stackY = cy - lh/2 - (att + 1) * (lh + 4);
-      var stackX = cx + 8;
-      if (stackX + lw > W - 5) stackX = cx - lw - 8;
-      if (stackY < 5) stackY = cy + 4 + att * (lh + 4);
+      var stackY = cy - lh/2 - (att + 1) * (lh + 3);
+      var stackX = cx - lw/2;
+      if (stackX + lw > W - 5) stackX = cx - lw - 6;
+      if (stackX < 5) stackX = cx + 6;
+      if (stackY < 5) stackY = cy + 4 + att * (lh + 3);
       if (stackY + lh > H - 10) continue;
-      if (stackX < 5) continue;
       var fallCand = { x: stackX, y: stackY, w: lw, h: lh };
       var fallOk = true;
       for (var fi = 0; fi < placedLabels.length; fi++) {
@@ -429,10 +430,10 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
       }
       if (fallOk) return { x: stackX, y: stackY };
     }
-    return { x: cx + 8, y: cy - lh - 8 - placedLabels.length * 3 };
+    return { x: cx - lw/2, y: cy - lh - 8 - placedLabels.length * 2 };
   }
- 
-  // Draw lines, points, and pill-labels (ONLY on last point)
+
+  // Draw lines and points first
   filteredNodes.forEach(function(nd) {
     var color = nodeColor(nd);
     var points = [];
@@ -443,44 +444,73 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
       }
     });
     if (points.length === 0) return;
- 
+
     // Polyline
     if (points.length > 1) {
       var pts = points.map(function(p) { return p.x + "," + p.y; }).join(" ");
       html += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
     }
- 
+
     // Data point circles
     points.forEach(function(pt) {
       html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + color + '" stroke="#fff" stroke-width="1.5"/>';
     });
- 
-    // PILL-LABEL ONLY ON LAST POINT (node name + value)
-    var lastPt = points[points.length - 1];
-    var valText = isPercent ? lastPt.v.toFixed(2) + "%" : lastPt.v.toFixed(1);
-    var lblText = nd + " " + valText;
-    var lw = Math.max(lblText.length * 5.8 + 12, 44);
-    var lh = 17;
-    var pos = findFreePos(lastPt.x, lastPt.y, lw, lh);
-    placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
- 
-    // Pill rectangle
-    html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '" opacity="0.92"/>';
-    // White bold text inside pill
-    html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '" font-size="8.5" fill="white" text-anchor="middle" font-weight="700">' + lblText + '</text>';
- 
-    // Connector line (dashed)
-    var connX = pos.x < lastPt.x ? pos.x + lw : pos.x;
-    var connY = pos.y + lh/2;
-    var dist = Math.sqrt(Math.pow(lastPt.x - connX, 2) + Math.pow(lastPt.y - connY, 2));
-    if (dist > 12) {
-      html += '<line x1="' + lastPt.x + '" y1="' + lastPt.y + '" x2="' + connX + '" y2="' + connY + '" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
-    }
   });
- 
+
+  // Now draw ALL labels with collision detection
+  filteredNodes.forEach(function(nd) {
+    var color = nodeColor(nd);
+    var points = [];
+    semanas.forEach(function(sem, si) {
+      var v = getData(nd, sem);
+      if (v !== null && v !== undefined && !isNaN(Number(v))) {
+        points.push({ x: xPos(si), y: yPos(Number(v)), v: Number(v), idx: si });
+      }
+    });
+    if (points.length === 0) return;
+
+    points.forEach(function(pt, pi) {
+      var isLast = (pi === points.length - 1);
+      var valText = isPercent ? pt.v.toFixed(1) + "%" : pt.v.toFixed(1);
+
+      if (isLast) {
+        // LAST POINT: Pill-label com node + valor (destaque)
+        var lblText = nd + " " + valText;
+        var lw = Math.max(lblText.length * 5.8 + 12, 44);
+        var lh = 17;
+        var pos = findFreePos(pt.x, pt.y, lw, lh);
+        placedLabels.push({ x: pos.x, y: pos.y, w: lw, h: lh });
+
+        // Pill rectangle
+        html += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + color + '" opacity="0.92"/>';
+        // White bold text
+        html += '<text x="' + (pos.x + lw/2) + '" y="' + (pos.y + lh - 4) + '" font-size="8.5" fill="white" text-anchor="middle" font-weight="700">' + lblText + '</text>';
+
+        // Connector line
+        var connX = pos.x < pt.x ? pos.x + lw : pos.x;
+        var connY = pos.y + lh/2;
+        var dist = Math.sqrt(Math.pow(pt.x - connX, 2) + Math.pow(pt.y - connY, 2));
+        if (dist > 12) {
+          html += '<line x1="' + pt.x + '" y1="' + pt.y + '" x2="' + connX + '" y2="' + connY + '" stroke="' + color + '" stroke-width="0.8" stroke-dasharray="2,2" opacity="0.5"/>';
+        }
+      } else {
+        // INTERMEDIATE POINTS: Texto simples com valor (sem pill)
+        var lw2 = Math.max(valText.length * 5.2 + 6, 28);
+        var lh2 = 13;
+        var pos2 = findFreePos(pt.x, pt.y, lw2, lh2);
+        placedLabels.push({ x: pos2.x, y: pos2.y, w: lw2, h: lh2 });
+
+        // Fundo semi-transparente branco para legibilidade
+        html += '<rect x="' + pos2.x + '" y="' + pos2.y + '" width="' + lw2 + '" height="' + lh2 + '" rx="2" fill="white" opacity="0.85"/>';
+        // Texto colorido com valor
+        html += '<text x="' + (pos2.x + lw2/2) + '" y="' + (pos2.y + lh2 - 3) + '" font-size="7.5" fill="' + color + '" text-anchor="middle" font-weight="600">' + valText + '</text>';
+      }
+    });
+  });
+
   svg.innerHTML = html;
 }
- 
+
 function buildLegend(legendId, filteredNodes) {
   var el = document.getElementById(legendId);
   if (!el) return;
@@ -490,29 +520,29 @@ function buildLegend(legendId, filteredNodes) {
       + nd + '</div>';
   }).join("");
 }
- 
+
 // ============================================================
 // INIT
 // ============================================================
- 
+
 document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("lastUpdateSpan").textContent =
     "Atualizado: " + (D.lastUpdate || "-");
- 
+
   var selGrupo = document.getElementById("filtroGrupo");
   Object.keys(D.grupos).forEach(function(g) {
     var o = document.createElement("option");
     o.value = g; o.textContent = g;
     selGrupo.appendChild(o);
   });
- 
+
   var selNode = document.getElementById("filtroNode");
   Object.keys(D.nodes).sort().forEach(function(nd) {
     var o = document.createElement("option");
     o.value = nd; o.textContent = nd;
     selNode.appendChild(o);
   });
- 
+
   var selSemana = document.getElementById("filtroSemana");
   var sems = (D.semanas || []).slice().reverse();
   sems.forEach(function(sem) {
@@ -520,7 +550,7 @@ document.addEventListener("DOMContentLoaded", function() {
     o.value = sem; o.textContent = sem;
     selSemana.appendChild(o);
   });
- 
+
   selGrupo.addEventListener("change", function() {
     document.getElementById("filtroNode").value = "todos";
     renderAll();
@@ -530,7 +560,7 @@ document.addEventListener("DOMContentLoaded", function() {
     renderAll();
   });
   selSemana.addEventListener("change", renderAll);
- 
+
   // Tab clicks
   document.getElementById("tabBar").addEventListener("click", function(e) {
     var btn = e.target;
@@ -543,14 +573,14 @@ document.addEventListener("DOMContentLoaded", function() {
     if (tabId === "ranking") { renderRanking(); launchConfetti(); }
     else renderAll();
   });
- 
+
   renderAll();
 });
- 
+
 // ============================================================
 // RENDER ALL
 // ============================================================
- 
+
 function renderAll() {
   renderResumo();
   renderPPP();
@@ -569,14 +599,15 @@ function renderAll() {
     function(nd,sem){ var e=getExtras(nd,sem); return e ? normPct(e.cpt) : null; }, 100);
   renderTendencia();
 }
+
 // ============================================================
 // RESUMO
 // ============================================================
- 
+
 function renderResumo() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
- 
+
   var recvVals=[], stowVals=[], depVals=[], pppVals=[];
   filtered.forEach(function(nd) {
     var d = getNodeData(nd, sem);
@@ -589,7 +620,7 @@ function renderResumo() {
   var avg = function(a){ return a.length>0 ? a.reduce(function(x,y){return x+y;},0)/a.length : null; };
   var avgRecv = avg(recvVals), avgStow = avg(stowVals);
   var avgDep  = avg(depVals),  avgPpp  = avg(pppVals);
- 
+
   function kpiCard(title, val, target, unit) {
     var display = val !== null ? val.toFixed(2) + unit : "-";
     var cls = val !== null ? (val >= target ? "target-met" : (val >= target*0.98 ? "" : "target-miss")) : "";
@@ -598,7 +629,7 @@ function renderResumo() {
       '<div class="value ' + valCls + '">' + display + '</div>' +
       '<div class="detail">Meta: ' + target + unit + '</div></div>';
   }
- 
+
   var grid = document.getElementById("resumoKpiGrid");
   grid.style.gridTemplateColumns = "repeat(4,1fr)";
   grid.innerHTML =
@@ -606,7 +637,7 @@ function renderResumo() {
     kpiCard("Stow %",    avgStow, 99.5, "%") +
     kpiCard("Departure %", avgDep, 99.5, "%") +
     kpiCard("PPP Medio", avgPpp, 175, "");
- 
+
   var th = document.getElementById("resumoThead");
   var tb = document.getElementById("resumoTbody");
   th.innerHTML = '<tr><th>Node</th><th>Grupo</th><th>Tipo</th>'
@@ -633,23 +664,23 @@ function renderResumo() {
   }).join("");
   tb.innerHTML = rows;
 }
- 
+
 // ============================================================
 // PPP
 // ============================================================
- 
+
 function renderPPP() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
   var allSems = D.semanas || [];
   var idx = allSems.indexOf(sem);
   var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
- 
+
   buildLegend("pppLegend", filtered);
   renderLineChart("pppChart", filtered, semsToShow,
     function(nd, s) { var d = getNodeData(nd, s); return d ? d.ppp : null; },
     175, "Meta 175", false);
- 
+
   var th = document.getElementById("pppThead");
   var tb = document.getElementById("pppTbody");
   var semCols = semsToShow.slice().reverse();
@@ -665,21 +696,21 @@ function renderPPP() {
     return '<tr><td><b>' + nd + '</b></td>' + cells + '</tr>';
   }).join("");
 }
- 
+
 // ============================================================
 // GENERIC METRIC RENDERER (Receive, Stow, Departure)
 // ============================================================
- 
+
 function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target, metaLabel, isPercent) {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
   var allSems = D.semanas || [];
   var idx = allSems.indexOf(sem);
   var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
- 
+
   buildLegend(legendId, filtered);
   renderLineChart(chartId, filtered, semsToShow, getVal, target, metaLabel, isPercent);
- 
+
   var grid = document.getElementById(kpiGridId);
   if (!grid) return;
   var ncols = Math.min(filtered.length, 4);
@@ -696,21 +727,21 @@ function renderMetric(tabId, title, chartId, legendId, kpiGridId, getVal, target
       + '<div class="detail">Meta: ' + target + "%</div></div>";
   }).join("");
 }
- 
+
 // ============================================================
 // OTD / CPT RENDERER
 // ============================================================
- 
+
 function renderOTDCPT(tabId, title, chartId, legendId, kpiGridId, getVal, target) {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
   var allSems = D.semanas || [];
   var idx = allSems.indexOf(sem);
   var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
- 
+
   buildLegend(legendId, filtered);
   renderLineChart(chartId, filtered, semsToShow, getVal, target, "Meta " + target + "%", true);
- 
+
   var grid = document.getElementById(kpiGridId);
   if (!grid) return;
   var ncols = Math.min(filtered.length, 4);
@@ -724,11 +755,11 @@ function renderOTDCPT(tabId, title, chartId, legendId, kpiGridId, getVal, target
       + '<div class="detail">Meta: ' + target + "%</div></div>";
   }).join("");
 }
- 
+
 // ============================================================
 // TENDENCIA
 // ============================================================
- 
+
 var trendMode = "semanal";
 window.setTrendMode = function(mode) {
   trendMode = mode;
@@ -736,7 +767,7 @@ window.setTrendMode = function(mode) {
   document.getElementById("btnDiario").classList.toggle("active", mode === "diario");
   renderTendencia();
 };
- 
+
 function renderTendencia() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
@@ -744,10 +775,10 @@ function renderTendencia() {
   var idx = allSems.indexOf(sem);
   var container = document.getElementById("tendenciaContent");
   container.innerHTML = "";
- 
+
   if (trendMode === "semanal") {
     var semsToShow = allSems.slice(Math.max(0, idx - 5), idx + 1);
- 
+
     // Definição dos 4 KPIs a exibir
     var kpis = [
       {
@@ -767,14 +798,14 @@ function renderTendencia() {
         getVal: function(nd, s) { var d = getNodeData(nd, s); return d ? d.ppp : null; }
       }
     ];
- 
+
     // Legenda (uma vez, no topo)
     var legendDiv = document.createElement("div");
     legendDiv.className = "legend";
     legendDiv.id = "tendLegend";
     container.appendChild(legendDiv);
     buildLegend("tendLegend", filtered);
- 
+
     // Gerar 1 gráfico por KPI
     kpis.forEach(function(kpi, ki) {
       var chartDiv = document.createElement("div");
@@ -786,7 +817,7 @@ function renderTendencia() {
       container.appendChild(chartDiv);
       renderLineChart(svgId, filtered, semsToShow, kpi.getVal, kpi.meta, kpi.metaLabel, kpi.isPercent);
     });
- 
+
   } else {
     // Daily mode
     if (!D.daily || Object.keys(D.daily).length === 0) {
@@ -794,7 +825,7 @@ function renderTendencia() {
         + 'Dados diarios ainda nao disponiveis.<br><small>Fonte: shipment_level.csv</small></div>';
       return;
     }
- 
+
     // Coletar datas disponíveis para nodes filtrados
     var datesSet = {};
     Object.keys(D.daily).forEach(function(k) {
@@ -803,27 +834,27 @@ function renderTendencia() {
       if (filtered.indexOf(nd) > -1) datesSet[parts[0]] = true;
     });
     var dates = Object.keys(datesSet).sort().slice(-6);
- 
+
     if (dates.length === 0) {
       container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
         + 'Sem dados diarios para os nodes selecionados.</div>';
       return;
     }
- 
+
     // Legenda
     var legendDiv2 = document.createElement("div");
     legendDiv2.className = "legend";
     legendDiv2.id = "tendDailyLegend";
     container.appendChild(legendDiv2);
     buildLegend("tendDailyLegend", filtered);
- 
+
     // Gráficos diários: Stow Miss e Departure Miss
     var dailyKpis = [
       { key: "stow_miss", label: "Stow Miss Diario (pos D+1)", field: "stow_miss_real" },
       { key: "dep_miss", label: "Departure Miss Diario (pos D+1)", field: "dep_miss_real" },
       { key: "miss_total", label: "Total Miss Diario", field: "miss_real" }
     ];
- 
+
     dailyKpis.forEach(function(dk) {
       var chartDiv2 = document.createElement("div");
       chartDiv2.className = "chart-container";
@@ -844,11 +875,11 @@ function renderTendencia() {
 // ============================================================
 // RANKING — Score + Tiebreakers: Stow > Recv > Dep > Vol > PPP
 // ============================================================
- 
+
 function renderRanking() {
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
- 
+
   var scores = filtered.map(function(nd) {
     var d  = getNodeData(nd, sem);
     var ex = getExtras(nd, sem);
@@ -858,18 +889,18 @@ function renderRanking() {
     var dv = normPct(d.depart) || 0;
     var ov = ex ? normPct(ex.otd) : null;
     var cv = ex ? normPct(ex.cpt) : null;
- 
+
     var rd = rv - 98.5;
     var sd = sv - 99.5;
     var dd = dv - 99.5;
     var od = ov !== null ? ov - 100 : null;
     var cd = cv !== null ? cv - 100 : null;
- 
+
     var components = [rd, sd, dd];
     if (od !== null) components.push(od);
     if (cd !== null) components.push(cd);
     var score = components.reduce(function(a, b) { return a + b; }, 0) / components.length;
- 
+
     return {
       node: nd, score: score,
       ppp: d.ppp || 0, vol: d.volume || 0,
@@ -877,7 +908,7 @@ function renderRanking() {
       rd: rd, sd: sd, dd: dd, od: od, cd: cd
     };
   }).filter(function(x) { return x !== null; });
- 
+
   // Sort: score desc, tiebreakers: Stow > Recv > Dep > Volume > PPP
   scores.sort(function(a, b) {
     if (Math.abs(b.score - a.score) > 0.001) return b.score - a.score;
@@ -887,12 +918,12 @@ function renderRanking() {
     if (b.vol !== a.vol) return b.vol - a.vol;
     return b.ppp - a.ppp;
   });
- 
+
   // Adaptive podium
   var container = document.getElementById("podiumContainer");
   container.innerHTML = "";
   var medals = ["\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
- 
+
   if (scores.length === 0) {
     container.innerHTML = '<p style="color:#64748b;padding:40px">Sem dados para o periodo selecionado.</p>';
   } else if (scores.length === 1) {
@@ -924,7 +955,7 @@ function renderRanking() {
       container.appendChild(item3);
     });
   }
- 
+
   // Ranking table
   var tbody = document.getElementById("rankTable");
   tbody.innerHTML = scores.map(function(s, i) {
@@ -950,7 +981,7 @@ function renderRanking() {
       + '</tr>';
   }).join("");
 }
- 
+
 function buildPodiumBlock(s, medal) {
   return '<div class="podium-block">'
     + '<div class="podium-medal">' + medal + '</div>'
@@ -959,11 +990,11 @@ function buildPodiumBlock(s, medal) {
     + '<div class="podium-ppp">PPP: ' + (s.ppp?Number(s.ppp).toFixed(0):"--") + '</div>'
     + '</div>';
 }
- 
+
 // ============================================================
 // CONFETTI
 // ============================================================
- 
+
 function launchConfetti() {
   var colors = ["#f59e0b","#3b82f6","#10b981","#ef4444","#8b5cf6","#ec4899"];
   var wrapper = document.createElement("div");
@@ -983,7 +1014,7 @@ function launchConfetti() {
   }
   setTimeout(function() { wrapper.remove(); }, 4200);
 }
- 
+
 })();
 </script>
 </body>
