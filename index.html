@@ -263,6 +263,23 @@ var EXCLUDE_NODES = ["EOZ8"];
 // HELPERS
 // ============================================================
 
+function fmtDateShort(d) {
+  if (!d) return "";
+  var s = String(d).trim();
+  if (/^\d{2}\/\d{2}$/.test(s)) return s;
+  var isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return isoMatch + "/" + isoMatch;
+  var brMatch = s.match(/^(\d{2})\/(\d{2})\/\d{4}/);
+  if (brMatch) return brMatch + "/" + brMatch;
+  var dateObj = new Date(s);
+  if (!isNaN(dateObj.getTime())) {
+    var dd = String(dateObj.getDate()).padStart(2, "0");
+    var mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+    return dd + "/" + mm;
+  }
+  return s.substring(0, 5);
+}
+       
 function fmtPct(v) {
   if (v === null || v === undefined) return "-";
   var n = Number(v);
@@ -597,7 +614,7 @@ function renderAll() {
     function(nd,sem){ var e=getExtras(nd,sem); return e ? normPct(e.otd) : null; }, 100);
   renderOTDCPT("cpt", "CPT %", "cptChart", "cptLegend", "cptKpiGrid",
     function(nd,sem){ var e=getExtras(nd,sem); return e ? normPct(e.cpt) : null; }, 100);
-  renderTendencia();
+  ();
 }
 
 // ============================================================
@@ -765,7 +782,7 @@ window.setTrendMode = function(mode) {
   trendMode = mode;
   document.getElementById("btnSemanal").classList.toggle("active", mode === "semanal");
   document.getElementById("btnDiario").classList.toggle("active", mode === "diario");
-  renderTendencia();
+  ();
 };
 
 function renderTendencia() {
@@ -818,13 +835,62 @@ function renderTendencia() {
       renderLineChart(svgId, filtered, semsToShow, kpi.getVal, kpi.meta, kpi.metaLabel, kpi.isPercent);
     });
 
-  } else {
+ } else {
     // Daily mode
     if (!D.daily || Object.keys(D.daily).length === 0) {
       container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
         + 'Dados diarios ainda nao disponiveis.<br><small>Fonte: shipment_level.csv</small></div>';
       return;
     }
+
+    var datesSet = {};
+    Object.keys(D.daily).forEach(function(k) {
+      var parts = k.split("|");
+      var nd = parts;
+      if (filtered.indexOf(nd) > -1) datesSet[parts] = true;
+    });
+    var datesRaw = Object.keys(datesSet).sort().slice(-6);
+
+    if (datesRaw.length === 0) {
+      container.innerHTML = '<div style="padding:40px;text-align:center;color:#64748b">'
+        + 'Sem dados diarios para os nodes selecionados.</div>';
+      return;
+    }
+
+    var dateLabels = datesRaw.map(function(d) { return fmtDateShort(d); });
+
+    var legendDiv2 = document.createElement("div");
+    legendDiv2.className = "legend";
+    legendDiv2.id = "tendDailyLegend";
+    container.appendChild(legendDiv2);
+    buildLegend("tendDailyLegend", filtered);
+
+    var dailyKpis = [
+      { key: "stow_miss", label: "Stow Miss Diario (pos D+1)", field: "stow_miss_real" },
+      { key: "dep_miss", label: "Departure Miss Diario (pos D+1)", field: "dep_miss_real" },
+      { key: "miss_total", label: "Total Miss Diario", field: "miss_real" }
+    ];
+
+    dailyKpis.forEach(function(dk) {
+      var chartDiv2 = document.createElement("div");
+      chartDiv2.className = "chart-container";
+      var svgId2 = "tendDaily_" + dk.key;
+      chartDiv2.innerHTML = '<h3>' + dk.label + ' — Ultimos ' + datesRaw.length + ' dias</h3>'
+        + '<div class="chart-meta">Miss reais (pos-correcao D+1)</div>'
+        + '<svg id="' + svgId2 + '" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>';
+      container.appendChild(chartDiv2);
+
+      renderLineChart(svgId2, filtered, dateLabels,
+        function(nd, lbl) {
+          var idx = dateLabels.indexOf(lbl);
+          if (idx === -1) return null;
+          var rawDate = datesRaw[idx];
+          var key = rawDate + "|" + nd;
+          if (!D.daily[key]) return null;
+          return D.daily[key][dk.field] !== undefined ? D.daily[key][dk.field] : D.daily[key].miss_real;
+        }, null, null, false);
+    });
+  }
 
     // Coletar datas disponíveis para nodes filtrados
     var datesSet = {};
