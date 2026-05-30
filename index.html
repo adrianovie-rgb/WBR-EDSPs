@@ -878,30 +878,109 @@ function renderTendencia() {
   }
 }
 
+
 // ============================================================
 // RANKING: podium ouro/prata/bronze + confetti + tabela com Regional
 // Score = avg gaps (Recv-98.5, Stow-99.5, Dep-99.5)
+// Filtros internos: Node / Grupo / Regional
 // ============================================================
 function renderRanking() {
-  var filtered=getFilteredNodes();
   var sem=document.getElementById("filtroSemana").value;
-  var scores=filtered.map(function(nd) {
-    var d=getNodeData(nd,sem); var ex=getExtras(nd,sem);
-    if (!d) return null;
-    var rv=normPct(d.receive)||0, sv=normPct(d.stow)||0, dv=normPct(d.depart)||0;
-    var rd=rv-98.5, sd=sv-99.5, dd=dv-99.5;
-    var ov=ex?normPct(ex.otd):null, cv=ex?normPct(ex.cpt):null;
-    var od=ov!==null?ov-100:null, cd=cv!==null?cv-100:null;
-    var comps=[rd,sd,dd];
-    if (od!==null) comps.push(od);
-    if (cd!==null) comps.push(cd);
-    var score=comps.reduce(function(a,b){return a+b;},0)/comps.length;
-    return {node:nd,score:score,ppp:d.ppp||0,vol:d.volume||0,
-            regional:D.nodes[nd]?D.nodes[nd].regional:"",
-            grupo:D.nodes[nd]?D.nodes[nd].grupo:"",
-            rd:rd,sd:sd,dd:dd,od:od,cd:cd};
-  }).filter(function(x){return x!==null;});
+  var rankMode = window._rankMode || "node";
 
+  // Botoes de modo dentro da aba
+  var panel = document.getElementById("panel-ranking");
+  var existingBtns = document.getElementById("rankModeButtons");
+  if (!existingBtns) {
+    var btnDiv = document.createElement("div");
+    btnDiv.id = "rankModeButtons";
+    btnDiv.style.textAlign = "center";
+    btnDiv.style.marginBottom = "16px";
+    btnDiv.innerHTML = '<button onclick="setRankMode(\'node\')" class="rank-btn' + (rankMode==="node"?" active":"") + '">Por Node</button> '
+      + '<button onclick="setRankMode(\'grupo\')" class="rank-btn' + (rankMode==="grupo"?" active":"") + '">Por Grupo</button> '
+      + '<button onclick="setRankMode(\'regional\')" class="rank-btn' + (rankMode==="regional"?" active":"") + '">Por Regional</button>';
+    var podC = document.getElementById("podiumContainer");
+    podC.parentNode.insertBefore(btnDiv, podC);
+  } else {
+    existingBtns.innerHTML = '<button onclick="setRankMode(\'node\')" class="rank-btn' + (rankMode==="node"?" active":"") + '">Por Node</button> '
+      + '<button onclick="setRankMode(\'grupo\')" class="rank-btn' + (rankMode==="grupo"?" active":"") + '">Por Grupo</button> '
+      + '<button onclick="setRankMode(\'regional\')" class="rank-btn' + (rankMode==="regional"?" active":"") + '">Por Regional</button>';
+  }
+
+  var scores=[];
+
+  if (rankMode === "node") {
+    var filtered=getFilteredNodes();
+    scores=filtered.map(function(nd) {
+      var d=getNodeData(nd,sem); var ex=getExtras(nd,sem);
+      if (!d) return null;
+      var rv=normPct(d.receive)||0, sv=normPct(d.stow)||0, dv=normPct(d.depart)||0;
+      var rd=rv-98.5, sd=sv-99.5, dd=dv-99.5;
+      var ov=ex?normPct(ex.otd):null, cv=ex?normPct(ex.cpt):null;
+      var od=ov!==null?ov-100:null, cd=cv!==null?cv-100:null;
+      var comps=[rd,sd,dd];
+      if (od!==null) comps.push(od);
+      if (cd!==null) comps.push(cd);
+      var score=comps.reduce(function(a,b){return a+b;},0)/comps.length;
+      return {node:nd,name:nd,score:score,ppp:d.ppp||0,vol:d.volume||0,
+              regional:D.nodes[nd]?D.nodes[nd].regional:"",
+              grupo:D.nodes[nd]?D.nodes[nd].grupo:"",
+              recv:rv,stow:sv,dep:dv,
+              rd:rd,sd:sd,dd:dd,od:od,cd:cd};
+    }).filter(function(x){return x!==null;});
+
+  } else if (rankMode === "grupo") {
+    var grupos={};
+    Object.keys(D.nodes).forEach(function(nd) {
+      if (EXCLUDE_NODES.indexOf(nd)!==-1) return;
+      var cfg=D.nodes[nd];
+      var g=cfg.grupo;
+      if (!grupos[g]) grupos[g]={recvW:[],stowW:[],depW:[],vol:0,pppArr:[]};
+      var d=cfg.semanas[sem];
+      if (!d) return;
+      var vol=d.volume||1;
+      if (d.receive!==null) grupos[g].recvW.push({v:d.receive,w:vol});
+      if (d.stow!==null) grupos[g].stowW.push({v:d.stow,w:vol});
+      if (d.depart!==null) grupos[g].depW.push({v:d.depart,w:vol});
+      grupos[g].vol+=vol;
+      if (d.ppp>0) grupos[g].pppArr.push(d.ppp);
+    });
+    Object.keys(grupos).forEach(function(g) {
+      var gd=grupos[g];
+      var wAvg=function(arr){
+        if(!arr.length)return 0;
+        var tw=0,ws=0;
+        arr.forEach(function(x){ws+=x.v*x.w;tw+=x.w;});
+        return tw>0?ws/tw:0;
+      };
+      var rv=wAvg(gd.recvW),sv=wAvg(gd.stowW),dv=wAvg(gd.depW);
+      var rd=rv-98.5,sd=sv-99.5,dd=dv-99.5;
+      var score=(rd+sd+dd)/3;
+      var pppAvg=gd.pppArr.length>0?gd.pppArr.reduce(function(a,b){return a+b;},0)/gd.pppArr.length:0;
+      scores.push({node:g,name:g,score:score,ppp:pppAvg,vol:gd.vol,
+        regional:"-",grupo:g,recv:rv,stow:sv,dep:dv,
+        rd:rd,sd:sd,dd:dd,od:null,cd:null});
+    });
+
+  } else {
+    // REGIONAL: dados reais do D.regionais (com D+1)
+    if (D.regionais) {
+      Object.keys(D.regionais).forEach(function(reg) {
+        var rd2=D.regionais[reg].semanas[sem];
+        if (!rd2) return;
+        var rv=rd2.receive!==null?rd2.receive:0;
+        var sv=rd2.stow!==null?rd2.stow:0;
+        var dv=rd2.depart!==null?rd2.depart:0;
+        var rdG=rv-98.5,sdG=sv-99.5,ddG=dv-99.5;
+        var score=(rdG+sdG+ddG)/3;
+        scores.push({node:reg,name:reg,score:score,ppp:rd2.ppp||0,vol:rd2.volume||0,
+          regional:reg,grupo:"-",recv:rv,stow:sv,dep:dv,
+          rd:rdG,sd:sdG,dd:ddG,od:null,cd:null});
+      });
+    }
+  }
+
+  // Ordenar: score DESC, desempate Stow>Receive>Departure>Volume>PPP
   scores.sort(function(a,b) {
     if (Math.abs(b.score-a.score)>0.001) return b.score-a.score;
     if (Math.abs(b.sd-a.sd)>0.001) return b.sd-a.sd;
@@ -911,6 +990,7 @@ function renderRanking() {
     return b.ppp-a.ppp;
   });
 
+  // PODIUM (Node e Grupo = podio + confetti | Regional = sem podio)
   var container=document.getElementById("podiumContainer");
   container.innerHTML="";
   var medals=["🥇","🥈","🥉"];
@@ -918,47 +998,123 @@ function renderRanking() {
   function buildPodiumBlock(s,medal) {
     return '<div class="podium-block">'
       +'<div class="podium-medal">'+medal+'</div>'
-      +'<div class="podium-node">'+s.node+'</div>'
+      +'<div class="podium-node">'+s.name+'</div>'
       +'<div class="podium-score">'+(s.score>=0?"+":"")+s.score.toFixed(2)+' pp</div>'
-      +'<div class="podium-ppp">PPP: '+(s.ppp?Number(s.ppp).toFixed(0):"--")+'</div>'
+      +'<div class="podium-ppp">PPP: '+(s.ppp>0?Number(s.ppp).toFixed(0):"--")+'</div>'
       +'</div>';
   }
 
-  if (scores.length===0) {
-    container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados.</p>';
-  } else if (scores.length===1) {
-    var el=document.createElement("div"); el.className="podium-item podium-1st";
-    el.innerHTML=buildPodiumBlock(scores,medals); container.appendChild(el);
-  } else if (scores.length===2) {
-    [[scores,"podium-2nd",medals],[scores,"podium-1st",medals]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x;
-      el.innerHTML=buildPodiumBlock(x,x); container.appendChild(el);
-    });
-  } else {
-    [[scores,"podium-2nd",medals],[scores,"podium-1st",medals],[scores,"podium-3rd",medals]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x;
-      el.innerHTML=buildPodiumBlock(x,x); container.appendChild(el);
-    });
+  if (rankMode !== "regional") {
+    if (scores.length===0) {
+      container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados.</p>';
+    } else if (scores.length===1) {
+      var el=document.createElement("div"); el.className="podium-item podium-1st";
+      el.innerHTML=buildPodiumBlock(scores``,medals``); container.appendChild(el);
+    } else if (scores.length===2) {
+      [[scores``,"podium-2nd",medals``],[scores``,"podium-1st",medals``]].forEach(function(x) {
+        var el=document.createElement("div"); el.className="podium-item "+x``;
+        el.innerHTML=buildPodiumBlock(x``,x``); container.appendChild(el);
+      });
+    } else {
+      [[scores``,"podium-2nd",medals``],[scores``,"podium-1st",medals``],[scores``,"podium-3rd",medals``]].forEach(function(x) {
+        var el=document.createElement("div"); el.className="podium-item "+x``;
+        el.innerHTML=buildPodiumBlock(x``,x``); container.appendChild(el);
+      });
+    }
+    setTimeout(function(){launchConfetti();},600);
   }
 
+  // TABELA
   var tbody=document.getElementById("rankTable");
+  var headerRow=tbody.parentNode.querySelector("thead tr");
+
+  if (rankMode==="node") {
+    headerRow.innerHTML='<th>#</th><th>Node</th><th>Regional</th><th>Grupo</th>'
+      +'<th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>'
+      +'<th>OTD Gap</th><th>CPT Gap</th><th>Score</th>';
+  } else if (rankMode==="grupo") {
+    headerRow.innerHTML='<th>#</th><th>Grupo</th>'
+      +'<th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>'
+      +'<th>Volume</th><th>PPP</th><th>Score</th>';
+  } else {
+    headerRow.innerHTML='<th>#</th><th>Regional</th>'
+      +'<th>Recv Gap</th><th>Stow Gap</th><th>Dep Gap</th>'
+      +'<th>Volume</th><th>PPP</th><th>Score</th>';
+  }
+
   tbody.innerHTML=scores.map(function(s,i) {
     function fmtGap(v){return v===null?"-":(v>=0?"+":"")+v.toFixed(2);}
-    return '<tr>'
-      +'<td><b>'+(i+1)+'</b></td>'
-      +'<td><span class="node-tag" style="background:'+nodeColor(s.node)+'22;color:'+nodeColor(s.node)+'">'+s.node+'</span></td>'
-      +'<td>'+s.regional+'</td>'
-      +'<td>'+s.grupo+'</td>'
-      +'<td class="'+(s.rd>=0?"ok":"miss")+'">'+fmtGap(s.rd)+'</td>'
-      +'<td class="'+(s.sd>=0?"ok":"miss")+'">'+fmtGap(s.sd)+'</td>'
-      +'<td class="'+(s.dd>=0?"ok":"miss")+'">'+fmtGap(s.dd)+'</td>'
-      +'<td class="'+(s.od!==null?s.od>=0?"ok":"miss":"")+'">'+fmtGap(s.od)+'</td>'
-      +'<td class="'+(s.cd!==null?s.cd>=0?"ok":"miss":"")+'">'+fmtGap(s.cd)+'</td>'
-      +'<td><b>'+(s.score>=0?"+":"")+s.score.toFixed(2)+' pp</b></td>'
-      +'</tr>';
-  }).join("");
+    var row='<tr><td><b>'+(i+1)+'</b></td>';
 
-  setTimeout(function(){launchConfetti();},600);
+    if (rankMode==="node") {
+      row+='<td><span class="node-tag" style="background:'+nodeColor(s.node)+'22;color:'+nodeColor(s.node)+'">'+s.node+'</span></td>'
+        +'<td>'+s.regional+'</td>'
+        +'<td>'+s.grupo+'</td>'
+        +'<td class="'+(s.rd>=0?"ok":"miss")+'">'+fmtGap(s.rd)+'</td>'
+        +'<td class="'+(s.sd>=0?"ok":"miss")+'">'+fmtGap(s.sd)+'</td>'
+        +'<td class="'+(s.dd>=0?"ok":"miss")+'">'+fmtGap(s.dd)+'</td>'
+        +'<td class="'+(s.od!==null?(s.od>=0?"ok":"miss"):"")+'">'+fmtGap(s.od)+'</td>'
+        +'<td class="'+(s.cd!==null?(s.cd>=0?"ok":"miss"):"")+'">'+fmtGap(s.cd)+'</td>'
+        +'<td><b>'+(s.score>=0?"+":"")+s.score.toFixed(2)+' pp</b></td>';
+    } else {
+      row+='<td><b>'+s.name+'</b></td>'
+        +'<td class="'+(s.rd>=0?"ok":"miss")+'">'+fmtGap(s.rd)+'</td>'
+        +'<td class="'+(s.sd>=0?"ok":"miss")+'">'+fmtGap(s.sd)+'</td>'
+        +'<td class="'+(s.dd>=0?"ok":"miss")+'">'+fmtGap(s.dd)+'</td>'
+        +'<td>'+s.vol.toLocaleString()+'</td>'
+        +'<td>'+(s.ppp>0?Number(s.ppp).toFixed(1):"-")+'</td>'
+        +'<td><b>'+(s.score>=0?"+":"")+s.score.toFixed(2)+' pp</b></td>';
+    }
+    row+='</tr>';
+    return row;
+  }).join("");
+}
+
+function setRankMode(mode) {
+  window._rankMode = mode;
+  renderRanking();
+}
+
+// ============================================================
+// RESUMO REGIONAIS: 5 graficos (Receive, Stow, Departure, PPP, TPH)
+// ============================================================
+function renderResumoRegionais() {
+  var container = document.getElementById("resumoRegionaisContainer");
+  if (!container || !D.regionais) {
+    if (container) container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados regionais.</p>';
+    return;
+  }
+  container.innerHTML = "";
+
+  var regionais = Object.keys(D.regionais);
+  var semanas = D.semanas;
+  var regColors = {"DF-SUL":"#e74c3c","RIMES-NE":"#3498db","SP CAP":"#2ecc71","SP INT":"#9b59b6"};
+
+  var charts = [
+    {title:"Receive % por Regional", field:"receive", meta:D.metas.recv, unit:"%"},
+    {title:"Stow % por Regional", field:"stow", meta:D.metas.stow, unit:"%"},
+    {title:"Departure % por Regional", field:"depart", meta:D.metas.dep, unit:"%"},
+    {title:"PPP por Regional", field:"ppp", meta:D.metas.ppp, unit:""},
+    {title:"TPH por Regional", field:"tph", meta:null, unit:""}
+  ];
+
+  charts.forEach(function(chart) {
+    var series = [];
+    regionais.forEach(function(reg) {
+      var data = [];
+      semanas.forEach(function(sem) {
+        var rd = D.regionais[reg].semanas[sem];
+        data.push(rd && rd[chart.field] !== undefined && rd[chart.field] !== null ? rd[chart.field] : null);
+      });
+      series.push({name:reg, data:data, color:regColors[reg]||"#666"});
+    });
+
+    var chartDiv = document.createElement("div");
+    chartDiv.style.marginBottom = "32px";
+    container.appendChild(chartDiv);
+
+    renderLineChart(chartDiv, chart.title, semanas, series, chart.meta, chart.unit);
+  });
 }
 
 // ============================================================
