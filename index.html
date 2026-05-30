@@ -242,6 +242,7 @@ tr:hover{background:#f8fafc}
 <!-- PANEL: REG. COMPARATIVO -->
 <div class="panel" id="panel-resumoRegionais"
   <div class="section-title">Comparativo Regional</div>
+<div style="margin-bottom:16px"><label style="font-size:.8rem;font-weight:600;color:#64748b">SEMANAS: </label><select id="filtroSemanasReg" style="padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"><option value="4">Últimas 4</option><option value="6" selected>Últimas 6</option><option value="0">Todas</option></select></div>
   <div id="resumoRegionaisContainer"></div>
 </div> 
        
@@ -1116,10 +1117,10 @@ function renderRanking() {
   }).join("");
 }
 
-function setRankMode(mode) {
+window.setRankMode = function(mode) {
   window._rankMode = mode;
   renderRanking();
-}
+};
        
 // ============================================================
 // RESUMO REGIONAIS: 5 graficos (Receive, Stow, Departure, PPP, TPH)
@@ -1207,6 +1208,9 @@ function renderResumoRegionais() {
     return;
   }
   container.innerHTML = "";
+var filtroSemReg = document.getElementById("filtroSemanasReg");
+var nSem = filtroSemReg ? parseInt(filtroSemReg.value) : 6;
+var semsToUse = nSem > 0 ? semanas.slice(-nSem) : semanas;
 
   var regionais = Object.keys(D.regionais);
   var semanas = D.semanas;
@@ -1224,7 +1228,7 @@ function renderResumoRegionais() {
     var series = [];
     regionais.forEach(function(reg) {
       var data = [];
-      semanas.forEach(function(sem) {
+      semsToUse.forEach(function(sem) {
         var rd = D.regionais[reg].semanas[sem];
         data.push(rd && rd[chart.field] !== undefined && rd[chart.field] !== null ? rd[chart.field] : null);
       });
@@ -1235,7 +1239,7 @@ function renderResumoRegionais() {
     chartDiv.style.marginBottom = "32px";
     container.appendChild(chartDiv);
 
-    renderRegionalChart(chartDiv, chart.title, semanas, series, chart.meta, chart.unit);
+    renderRegionalChart(chartDiv, chart.title, semsToUse, series, chart.meta, chart.unit);
   });
 }
 
