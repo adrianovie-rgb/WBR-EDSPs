@@ -884,6 +884,50 @@ function renderTendencia() {
 // Score = avg gaps (Recv-98.5, Stow-99.5, Dep-99.5)
 // Filtros internos: Node / Grupo / Regional
 // ============================================================
+
+function launchConfetti() {
+  var canvas = document.getElementById("confettiCanvas");
+  if (!canvas) {
+    canvas = document.createElement("canvas");
+    canvas.id = "confettiCanvas";
+    canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999";
+    document.body.appendChild(canvas);
+  }
+  var ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var pieces = [];
+  var colors = ["#f44336","#e91e63","#9c27b0","#2196f3","#4caf50","#ffeb3b","#ff9800"];
+  for (var i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      r: Math.random() * 6 + 4,
+      d: Math.random() * 150,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      tilt: Math.random() * 10 - 10,
+      tiltInc: Math.random() * 0.07 + 0.05
+    });
+  }
+  var frames = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(function(p) {
+      ctx.beginPath();
+      ctx.fillStyle = p.color;
+      ctx.fillRect(p.x, p.y, p.r, p.r * 1.5);
+      p.y += Math.cos(p.d) + 2;
+      p.x += Math.sin(p.d) * 0.5;
+      p.tilt += p.tiltInc;
+      if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+    });
+    frames++;
+    if (frames < 180) requestAnimationFrame(draw);
+    else { ctx.clearRect(0, 0, canvas.width, canvas.height); canvas.remove(); }
+  }
+  draw();
+}
+       
 function renderRanking() {
   var sem=document.getElementById("filtroSemana").value;
   var rankMode = window._rankMode || "node";
