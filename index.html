@@ -240,7 +240,7 @@ tr:hover{background:#f8fafc}
 </div>
 
 <!-- PANEL: REG. COMPARATIVO -->
-<div class="panel" id="panel-resumoRegionais" style="display:none;">
+<div class="panel" id="panel-resumoRegionais"
   <div class="section-title">Comparativo Regional</div>
   <div id="resumoRegionaisContainer"></div>
 </div> 
@@ -271,6 +271,8 @@ tr:hover{background:#f8fafc}
 <script>
 (function(){
 
+var EXCLUDE_NODES = ["EOZ8"];
+       
 // ============================================================
 // 30 CORES DISTINTAS PARA OS NODES
 // ============================================================
@@ -603,7 +605,7 @@ function renderResumo() {
   }
 
   // Cards KPI modo Regional - valores reais com D+1
-  var modo = getModo();
+  var modo = "node";
   var semR = document.getElementById("filtroSemana").value;
 
   if (modo === "regional" && D.regionais) {
@@ -1195,62 +1197,6 @@ function renderRegionalChart(container, title, semanas, series, meta, unit) {
     html+='<text x="'+(lx+16)+'" y="'+(ly+i*18+10)+'" font-size="10" fill="#1e293b">'+s.name+'</text>';
   });
 
-  svg.innerHTML=html;
-}
-
-  function renderRegionalChart(container, title, semanas, series, meta, unit) {
-  var PAD_L=70,PAD_R=150,PAD_T=40,PAD_B=55,W=900,H=300;
-  var chartW=W-PAD_L-PAD_R,chartH=H-PAD_T-PAD_B;
-  var svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 "+W+" "+H);
-  svg.setAttribute("width","100%");
-  svg.style.maxWidth=W+"px";
-  svg.style.display="block";
-  svg.style.margin="0 auto";
-  container.appendChild(svg);
-  var titleEl='<text x="'+W/2+'" y="18" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">'+title+'</text>';
-  var allVals=[];
-  series.forEach(function(s){s.data.forEach(function(v){if(v!==null)allVals.push(v);});});
-  if(meta!==null&&meta!==undefined)allVals.push(meta);
-  if(allVals.length===0){svg.innerHTML='<text x="450" y="150" text-anchor="middle" fill="#64748b">Sem dados</text>';return;}
-  var minVal=Math.min.apply(null,allVals),maxVal=Math.max.apply(null,allVals);
-  var range=maxVal-minVal;if(range===0)range=1;
-  var pad2=range*0.15;minVal-=pad2;maxVal+=pad2;range=maxVal-minVal;
-  function xPos(idx){return PAD_L+(idx/Math.max(semanas.length-1,1))*chartW;}
-  function yPos(v){return PAD_T+chartH-((v-minVal)/range)*chartH;}
-  var html=titleEl;
-  for(var gi=0;gi<=4;gi++){
-    var gv=minVal+(range/4)*gi,gy=yPos(gv);
-    var lbl=unit==="%"?gv.toFixed(1)+"%":gv.toFixed(0);
-    html+='<line x1="'+PAD_L+'" y1="'+gy+'" x2="'+(W-PAD_R)+'" y2="'+gy+'" stroke="#e2e8f0" stroke-width="1"/>';
-    html+='<text x="'+(PAD_L-6)+'" y="'+(gy+4)+'" font-size="9" fill="#64748b" text-anchor="end">'+lbl+'</text>';
-  }
-  semanas.forEach(function(s,idx){
-    html+='<text x="'+xPos(idx)+'" y="'+(H-PAD_B+16)+'" font-size="10" fill="#64748b" text-anchor="middle">'+s+'</text>';
-  });
-  if(meta!==null&&meta!==undefined){
-    var my=yPos(meta);
-    html+='<line x1="'+PAD_L+'" y1="'+my+'" x2="'+(W-PAD_R)+'" y2="'+my+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    html+='<text x="'+(W-PAD_R+4)+'" y="'+(my+4)+'" font-size="9" fill="#ef4444" font-weight="600">Meta '+meta+'</text>';
-  }
-  series.forEach(function(s){
-    var points=[];
-    s.data.forEach(function(v,idx){if(v!==null)points.push({x:xPos(idx),y:yPos(v),v:v});});
-    if(points.length<2)return;
-    var pathD="M"+points.map(function(p){return p.x+","+p.y;}).join("L");
-    html+='<path d="'+pathD+'" fill="none" stroke="'+s.color+'" stroke-width="2.5"/>';
-    points.forEach(function(p){
-      html+='<circle cx="'+p.x+'" cy="'+p.y+'" r="3.5" fill="'+s.color+'"/>';
-      var lb=unit==="%"?p.v.toFixed(1)+"%":p.v.toFixed(0);
-      html+='<text x="'+p.x+'" y="'+(p.y-8)+'" font-size="8" fill="'+s.color+'" text-anchor="middle" font-weight="600">'+lb+'</text>';
-    });
-  });
-  var ly=PAD_T+10;
-  series.forEach(function(s,idx){
-    var lx=W-PAD_R+10;
-    html+='<rect x="'+lx+'" y="'+(ly+idx*18)+'" width="12" height="12" rx="2" fill="'+s.color+'"/>';
-    html+='<text x="'+(lx+16)+'" y="'+(ly+idx*18+10)+'" font-size="10" fill="#1e293b">'+s.name+'</text>';
-  });
   svg.innerHTML=html;
 }
 
