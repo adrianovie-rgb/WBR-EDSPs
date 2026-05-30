@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WBR - EDSPs / Performance Dashboard - Multi Regional</title>
+<style>
 .rank-btn { padding: 6px 16px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; margin: 0 4px; }
 .rank-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
 <style>
@@ -1009,16 +1010,16 @@ function renderRanking() {
       container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados.</p>';
     } else if (scores.length===1) {
       var el=document.createElement("div"); el.className="podium-item podium-1st";
-      el.innerHTML=buildPodiumBlock(scores``,medals``); container.appendChild(el);
+      el.innerHTML=buildPodiumBlock(scores[0],medals[0]); container.appendChild(el);
     } else if (scores.length===2) {
-      [[scores``,"podium-2nd",medals``],[scores``,"podium-1st",medals``]].forEach(function(x) {
-        var el=document.createElement("div"); el.className="podium-item "+x``;
-        el.innerHTML=buildPodiumBlock(x``,x``); container.appendChild(el);
+      [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]]].forEach(function(x) {
+        var el=document.createElement("div"); el.className="podium-item "+x[1];
+        el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
       });
     } else {
-      [[scores``,"podium-2nd",medals``],[scores``,"podium-1st",medals``],[scores``,"podium-3rd",medals``]].forEach(function(x) {
-        var el=document.createElement("div"); el.className="podium-item "+x``;
-        el.innerHTML=buildPodiumBlock(x``,x``); container.appendChild(el);
+      [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]],[scores[2],"podium-3rd",medals[2]]].forEach(function(x) {
+        var el=document.createElement("div"); el.className="podium-item "+x[1];
+        el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
       });
     }
     setTimeout(function(){launchConfetti();},600);
