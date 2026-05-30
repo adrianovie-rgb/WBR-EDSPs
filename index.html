@@ -764,6 +764,18 @@ function getFilteredNodes() {
 // ============================================================
 // RESUMO
 // ============================================================
+function kpiCard(label, value, meta, unit) {
+  unit = unit || "%";
+  var v = value !== null && value !== undefined ? value : "-";
+  var cls = "kpi-miss";
+  if (typeof value === "number") {
+    if (unit === "%" && value >= meta) cls = "kpi-hit";
+    else if (unit !== "%" && value >= meta) cls = "kpi-hit";
+    v = unit === "%" ? value.toFixed(2) + "%" : value.toFixed(1);
+  }
+  return '<div class="kpi-card ' + cls + '"><div class="kpi-label">' + label + '</div><div class="kpi-value">' + v + '</div><div class="kpi-meta">Meta: ' + meta + (unit === "%" ? "%" : "") + '</div></div>';
+}
+     
 function renderResumo() {
   var filtrados = getFilteredNodes();  // ja respeita o modo
   var sem       = document.getElementById("filtroSemana").value;
