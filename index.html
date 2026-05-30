@@ -582,6 +582,11 @@ function buildLegend(legendId, filteredNodes) {
   }).join("");
 }
 
+function getModo() {
+  var sel = document.getElementById("filtroModo");
+  return sel ? sel.value : "node";
+}
+
 // ============================================================
 // RESUMO
 // ============================================================
