@@ -1223,10 +1223,11 @@ function launchConfetti() {
 // INIT + renderAll
 // ============================================================
 function init() {
-  if (typeof D==="undefined") {
+  if (typeof DATA==="undefined") {
     document.getElementById("lastUpdateSpan").textContent="Erro: data.js nao carregado";
     return;
   }
+  var D = DATA;
   document.getElementById("lastUpdateSpan").textContent="Atualizado: "+(D.lastUpdate||"-");
 
   // Populate Regional filter
