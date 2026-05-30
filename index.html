@@ -240,7 +240,7 @@ tr:hover{background:#f8fafc}
 </div>
 
 <!-- PANEL: REG. COMPARATIVO -->
-<div class="panel" id="panel-resumoRegionais"
+<div class="panel" id="panel-resumoRegionais">
   <div class="section-title">Comparativo Regional</div>
 <div style="margin-bottom:16px"><label style="font-size:.8rem;font-weight:600;color:#64748b">SEMANAS: </label><select id="filtroSemanasReg" style="padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"><option value="4">Últimas 4</option><option value="6" selected>Últimas 6</option><option value="0">Todas</option></select></div>
   <div id="resumoRegionaisContainer"></div>
@@ -352,7 +352,7 @@ function getFilteredNodes() {
   var regional = document.getElementById("filtroRegional").value;
   var grupo    = document.getElementById("filtroGrupo").value;
   var node     = document.getElementById("filtroNode").value;
-  if (node !== "todos") return [node];
+  if (node !== "todos") return EXCLUDE_NODES.indexOf(node) === -1 ? [node] : [];
   var list = Object.keys(D.nodes).sort();
   if (regional !== "todos") {
     list = list.filter(function(nd) {
@@ -364,6 +364,7 @@ function getFilteredNodes() {
       return D.nodes[nd].grupo === grupo;
     });
   }
+  list = list.filter(function(nd){ return EXCLUDE_NODES.indexOf(nd) === -1; });
   return list;
 }
 
@@ -701,6 +702,7 @@ function renderResumo() {
       + '<td>' + fmtNum(d.backlog, 0) + '</td></tr>';
   }).join("");
 }
+
 
 // ============================================================
 // PPP
@@ -1208,12 +1210,11 @@ function renderResumoRegionais() {
     return;
   }
   container.innerHTML = "";
-var filtroSemReg = document.getElementById("filtroSemanasReg");
-var nSem = filtroSemReg ? parseInt(filtroSemReg.value) : 6;
-var semsToUse = nSem > 0 ? semanas.slice(-nSem) : semanas;
-
-  var regionais = Object.keys(D.regionais);
   var semanas = D.semanas;
+  var regionais = Object.keys(D.regionais);
+  var filtroSemReg = document.getElementById("filtroSemanasReg");
+  var nSem = filtroSemReg ? parseInt(filtroSemReg.value) : 6;
+  var semsToUse = nSem > 0 ? semanas.slice(-nSem) : semanas;
   var regColors = {"DF-SUL":"#e74c3c","RIMES-NE":"#3498db","SP CAP":"#2ecc71","SP INT":"#9b59b6"};
 
   var charts = [
@@ -1278,6 +1279,7 @@ function init() {
   });
   document.getElementById("filtroNode").addEventListener("change",renderAll);
   document.getElementById("filtroSemana").addEventListener("change",renderAll);
+  document.getElementById("filtroSemanasReg").addEventListener("change", function(){ if(document.querySelector('.tab.active').dataset.tab==='resumoRegionais') renderResumoRegionais(); });
 
   document.querySelectorAll(".tab").forEach(function(tab) {
     tab.addEventListener("click",function() {
