@@ -898,7 +898,7 @@ function launchConfetti() {
   canvas.height = window.innerHeight;
   var pieces = [];
   var colors = ["#f44336","#e91e63","#9c27b0","#2196f3","#4caf50","#ffeb3b","#ff9800"];
-  for (var i = 0; i < 150; i++) {
+  for (var i = 0; i < 400; i++) {
     pieces.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height - canvas.height,
@@ -922,7 +922,7 @@ function launchConfetti() {
       if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
     });
     frames++;
-    if (frames < 180) requestAnimationFrame(draw);
+    if (frames < 300) requestAnimationFrame(draw);
     else { ctx.clearRect(0, 0, canvas.width, canvas.height); canvas.remove(); }
   }
   draw();
