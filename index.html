@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WBR - EDSPs / Performance Dashboard - Multi Regional</title>
+.rank-btn { padding: 6px 16px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; cursor: pointer; margin: 0 4px; }
+.rank-btn.active { background: #1e293b; color: #fff; border-color: #1e293b; }
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',system-ui,sans-serif;background:#f8fafc;color:#1e293b}
@@ -142,6 +144,7 @@ tr:hover{background:#f8fafc}
   <button class="tab" data-tab="otd">OTD</button>
   <button class="tab" data-tab="cpt">CPT</button>
   <button class="tab" data-tab="tendencia">Tendencia</button>
+  <button class="tab" data-tab="resumoRegionais">Reg. Comparativo</button>
   <button class="tab" data-tab="ranking">Ranking</button>
 </div>
 
@@ -236,6 +239,12 @@ tr:hover{background:#f8fafc}
   <div id="tendenciaContent"></div>
 </div>
 
+<!-- PANEL: REG. COMPARATIVO -->
+<div class="panel" id="panel-resumoRegionais" style="display:none;">
+  <div class="section-title">Comparativo Regional</div>
+  <div id="resumoRegionaisContainer"></div>
+</div> 
+       
 <!-- PANEL: RANKING (podium + confetti + tabela com Regional) -->
 <div class="panel" id="panel-ranking">
   <div class="section-title">Ranking - Performance Consolidada</div>
@@ -577,56 +586,111 @@ function buildLegend(legendId, filteredNodes) {
 // RESUMO
 // ============================================================
 function renderResumo() {
+
+  // Funcao auxiliar kpiCard (usada em ambos os modos)
+  function kpiCard(title, val, target, unit) {
+    var display = val !== null ? val.toFixed(2) + unit : "-";
+    var cls = val !== null ? (val >= target ? "target-met" : val >= target * 0.98 ? "" : "target-miss") : "";
+    var vCls = val !== null ? (val >= target ? "ok" : val >= target * 0.98 ? "warn" : "miss") : "";
+    return '<div class="kpi-card ' + cls + '"><h4>' + title + '</h4>'
+      + '<div class="value ' + vCls + '">' + display + '</div>'
+      + '<div class="detail">Meta: ' + target + unit + '</div></div>';
+  }
+
+  // Cards KPI modo Regional - valores reais com D+1
+  var modo = getModo();
+  var semR = document.getElementById("filtroSemana").value;
+
+  if (modo === "regional" && D.regionais) {
+    var filtroReg = document.getElementById("filtroRegional").value;
+    var totalVol = 0, sumRecv = 0, sumStow = 0, sumDep = 0, sumPpp = 0, cPpp = 0;
+
+    Object.keys(D.regionais).forEach(function(reg) {
+      if (filtroReg !== "Todos" && reg !== filtroReg) return;
+      var rd = D.regionais[reg].semanas[semR];
+      if (!rd) return;
+      var vol = rd.volume || 1;
+      totalVol += vol;
+      if (rd.receive !== null) sumRecv += rd.receive * vol;
+      if (rd.stow !== null) sumStow += rd.stow * vol;
+      if (rd.depart !== null) sumDep += rd.depart * vol;
+      if (rd.ppp !== null && rd.ppp > 0) { sumPpp += rd.ppp * vol; cPpp += vol; }
+    });
+
+    var recvPct = totalVol > 0 ? sumRecv / totalVol : 0;
+    var stowPct = totalVol > 0 ? sumStow / totalVol : 0;
+    var depPct  = totalVol > 0 ? sumDep / totalVol : 0;
+    var pppVal  = cPpp > 0 ? sumPpp / cPpp : 0;
+
+    var grid = document.getElementById("resumoKpiGrid");
+    grid.style.gridTemplateColumns = "repeat(4,1fr)";
+    grid.innerHTML =
+      kpiCard("Receive %", recvPct, 98.5, "%") +
+      kpiCard("Stow %", stowPct, 99.5, "%") +
+      kpiCard("Departure %", depPct, 99.5, "%") +
+      kpiCard("PPP Medio", pppVal > 0 ? pppVal : null, 175, "");
+
+    var th = document.getElementById("resumoThead");
+    var tb = document.getElementById("resumoTbody");
+    th.innerHTML = '<tr><th>Regional</th><th>Volume</th><th>Receive %</th><th>Stow %</th><th>Departure %</th><th>PPP</th></tr>';
+    tb.innerHTML = Object.keys(D.regionais).map(function(reg) {
+      if (filtroReg !== "Todos" && reg !== filtroReg) return "";
+      var rd = D.regionais[reg].semanas[semR];
+      if (!rd) return "";
+      var rv = rd.receive, sv = rd.stow, dv = rd.depart;
+      return '<tr><td><b>' + reg + '</b></td>'
+        + '<td>' + fmtNum(rd.volume, 0) + '</td>'
+        + '<td class="' + cellClass(rv, 98.5) + '">' + (rv !== null ? rv.toFixed(2) + "%" : "-") + '</td>'
+        + '<td class="' + cellClass(sv, 99.5) + '">' + (sv !== null ? sv.toFixed(2) + "%" : "-") + '</td>'
+        + '<td class="' + cellClass(dv, 99.5) + '">' + (dv !== null ? dv.toFixed(2) + "%" : "-") + '</td>'
+        + '<td>' + (rd.ppp > 0 ? Number(rd.ppp).toFixed(1) : "-") + '</td></tr>';
+    }).join("");
+    return;
+  }
+
+  // === MODO NODE/GRUPO (codigo original) ===
   var filtered = getFilteredNodes();
   var sem = document.getElementById("filtroSemana").value;
-  var recvVals=[],stowVals=[],depVals=[],pppVals=[];
+  var recvVals = [], stowVals = [], depVals = [], pppVals = [];
   filtered.forEach(function(nd) {
     var d = getNodeData(nd, sem);
     if (!d) return;
-    if (d.receive!==null) recvVals.push(normPct(d.receive));
-    if (d.stow!==null)    stowVals.push(normPct(d.stow));
-    if (d.depart!==null)  depVals.push(normPct(d.depart));
-    if (d.ppp!==null)     pppVals.push(Number(d.ppp));
+    if (d.receive !== null) recvVals.push(normPct(d.receive));
+    if (d.stow !== null) stowVals.push(normPct(d.stow));
+    if (d.depart !== null) depVals.push(normPct(d.depart));
+    if (d.ppp !== null) pppVals.push(Number(d.ppp));
   });
-  var avg=function(a){return a.length>0?a.reduce(function(x,y){return x+y;},0)/a.length:null;};
-  var avgRecv=avg(recvVals),avgStow=avg(stowVals),avgDep=avg(depVals),avgPpp=avg(pppVals);
+  var avg = function(a) { return a.length > 0 ? a.reduce(function(x, y) { return x + y; }, 0) / a.length : null; };
+  var avgRecv = avg(recvVals), avgStow = avg(stowVals), avgDep = avg(depVals), avgPpp = avg(pppVals);
 
-  function kpiCard(title, val, target, unit) {
-    var display=val!==null?val.toFixed(2)+unit:"-";
-    var cls=val!==null?(val>=target?"target-met":val>=target*0.98?"":"target-miss"):"";
-    var vCls=val!==null?(val>=target?"ok":val>=target*0.98?"warn":"miss"):"";
-    return '<div class="kpi-card '+cls+'"><h4>'+title+'</h4>'
-      +'<div class="value '+vCls+'">'+display+'</div>'
-      +'<div class="detail">Meta: '+target+unit+'</div></div>';
-  }
-  var grid=document.getElementById("resumoKpiGrid");
-  grid.style.gridTemplateColumns="repeat(4,1fr)";
-  grid.innerHTML=kpiCard("Receive %",avgRecv,98.5,"%")
-    +kpiCard("Stow %",avgStow,99.5,"%")
-    +kpiCard("Departure %",avgDep,99.5,"%")
-    +kpiCard("PPP Medio",avgPpp,175,"");
+  var grid = document.getElementById("resumoKpiGrid");
+  grid.style.gridTemplateColumns = "repeat(4,1fr)";
+  grid.innerHTML = kpiCard("Receive %", avgRecv, 98.5, "%")
+    + kpiCard("Stow %", avgStow, 99.5, "%")
+    + kpiCard("Departure %", avgDep, 99.5, "%")
+    + kpiCard("PPP Medio", avgPpp, 175, "");
 
-  var th=document.getElementById("resumoThead");
-  var tb=document.getElementById("resumoTbody");
-  th.innerHTML='<tr><th>Node</th><th>Regional</th><th>Grupo</th><th>Tipo</th>'
-    +'<th>Volume</th><th>Receive %</th><th>Stow %</th><th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
-  tb.innerHTML=filtered.map(function(nd) {
-    var d=getNodeData(nd,sem); if(!d) return "";
-    var cfg=D.nodes[nd];
-    var d1s=cfg&&cfg.d1_stow?'<span class="badge-d1">D+1 Stow</span>':"";
-    var d1d=cfg&&cfg.d1_dep?'<span class="badge-d1">D+1 Dep</span>':"";
-    var rv=normPct(d.receive),sv=normPct(d.stow),dv=normPct(d.depart);
+  var th = document.getElementById("resumoThead");
+  var tb = document.getElementById("resumoTbody");
+  th.innerHTML = '<tr><th>Node</th><th>Regional</th><th>Grupo</th><th>Tipo</th>'
+    + '<th>Volume</th><th>Receive %</th><th>Stow %</th><th>Departure %</th><th>PPP</th><th>Backlog</th></tr>';
+  tb.innerHTML = filtered.map(function(nd) {
+    var d = getNodeData(nd, sem); if (!d) return "";
+    var cfg = D.nodes[nd];
+    var d1s = cfg && cfg.d1_stow ? '<span class="badge-d1">D+1 Stow</span>' : "";
+    var d1d = cfg && cfg.d1_dep ? '<span class="badge-d1">D+1 Dep</span>' : "";
+    var rv = normPct(d.receive), sv = normPct(d.stow), dv = normPct(d.depart);
     return '<tr>'
-      +'<td><span class="node-tag" style="background:'+nodeColor(nd)+'22;color:'+nodeColor(nd)+'">'+nd+'</span>'+d1s+d1d+'</td>'
-      +'<td>'+( cfg?cfg.regional:"")+'</td>'
-      +'<td>'+( cfg?cfg.grupo:"")+'</td>'
-      +'<td>'+( cfg?cfg.tipo:"")+'</td>'
-      +'<td>'+fmtNum(d.volume,0)+'</td>'
-      +'<td class="'+cellClass(rv,98.5)+'">'+( rv!==null?rv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+cellClass(sv,99.5)+'">'+( sv!==null?sv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+cellClass(dv,99.5)+'">'+( dv!==null?dv.toFixed(2)+"%":"-")+'</td>'
-      +'<td class="'+( d.ppp>=175?"ok":d.ppp>=160?"warn":"miss")+'">'+fmtNum(d.ppp,1)+'</td>'
-      +'<td>'+fmtNum(d.backlog,0)+'</td></tr>';
+      + '<td><span class="node-tag" style="background:' + nodeColor(nd) + '22;color:' + nodeColor(nd) + '">' + nd + '</span>' + d1s + d1d + '</td>'
+      + '<td>' + (cfg ? cfg.regional : "") + '</td>'
+      + '<td>' + (cfg ? cfg.grupo : "") + '</td>'
+      + '<td>' + (cfg ? cfg.tipo : "") + '</td>'
+      + '<td>' + fmtNum(d.volume, 0) + '</td>'
+      + '<td class="' + cellClass(rv, 98.5) + '">' + (rv !== null ? rv.toFixed(2) + "%" : "-") + '</td>'
+      + '<td class="' + cellClass(sv, 99.5) + '">' + (sv !== null ? sv.toFixed(2) + "%" : "-") + '</td>'
+      + '<td class="' + cellClass(dv, 99.5) + '">' + (dv !== null ? dv.toFixed(2) + "%" : "-") + '</td>'
+      + '<td class="' + (d.ppp >= 175 ? "ok" : d.ppp >= 160 ? "warn" : "miss") + '">' + fmtNum(d.ppp, 1) + '</td>'
+      + '<td>' + fmtNum(d.backlog, 0) + '</td></tr>';
   }).join("");
 }
 
@@ -814,83 +878,209 @@ function renderTendencia() {
 // Score = avg gaps (Recv-98.5, Stow-99.5, Dep-99.5)
 // ============================================================
 function renderRanking() {
-  var filtered=getFilteredNodes();
-  var sem=document.getElementById("filtroSemana").value;
-  var scores=filtered.map(function(nd) {
-    var d=getNodeData(nd,sem); var ex=getExtras(nd,sem);
-    if (!d) return null;
-    var rv=normPct(d.receive)||0, sv=normPct(d.stow)||0, dv=normPct(d.depart)||0;
-    var rd=rv-98.5, sd=sv-99.5, dd=dv-99.5;
-    var ov=ex?normPct(ex.otd):null, cv=ex?normPct(ex.cpt):null;
-    var od=ov!==null?ov-100:null, cd=cv!==null?cv-100:null;
-    var comps=[rd,sd,dd];
-    if (od!==null) comps.push(od);
-    if (cd!==null) comps.push(cd);
-    var score=comps.reduce(function(a,b){return a+b;},0)/comps.length;
-    return {node:nd,score:score,ppp:d.ppp||0,vol:d.volume||0,
-            regional:D.nodes[nd]?D.nodes[nd].regional:"",
-            grupo:D.nodes[nd]?D.nodes[nd].grupo:"",
-            rd:rd,sd:sd,dd:dd,od:od,cd:cd};
-  }).filter(function(x){return x!==null;});
+  var sem = document.getElementById("filtroSemana").value;
+  var rankMode = window._rankMode || "node";
 
-  scores.sort(function(a,b) {
-    if (Math.abs(b.score-a.score)>0.001) return b.score-a.score;
-    if (Math.abs(b.sd-a.sd)>0.001) return b.sd-a.sd;
-    if (Math.abs(b.rd-a.rd)>0.001) return b.rd-a.rd;
-    if (Math.abs(b.dd-a.dd)>0.001) return b.dd-a.dd;
-    if (b.vol!==a.vol) return b.vol-a.vol;
-    return b.ppp-a.ppp;
+  // Botoes de modo
+  var btnArea = document.getElementById("podiumContainer").parentNode;
+  var existingBtns = document.getElementById("rankModeButtons");
+  if (!existingBtns) {
+    var btnDiv = document.createElement("div");
+    btnDiv.id = "rankModeButtons";
+    btnDiv.style.textAlign = "center";
+    btnDiv.style.marginBottom = "16px";
+    btnDiv.innerHTML = '<button onclick="setRankMode(\'node\')" class="rank-btn' + (rankMode === "node" ? " active" : "") + '">Por Node</button> ' +
+      '<button onclick="setRankMode(\'grupo\')" class="rank-btn' + (rankMode === "grupo" ? " active" : "") + '">Por Grupo</button> ' +
+      '<button onclick="setRankMode(\'regional\')" class="rank-btn' + (rankMode === "regional" ? " active" : "") + '">Por Regional</button>';
+    btnArea.insertBefore(btnDiv, btnArea.firstChild);
+  } else {
+    existingBtns.innerHTML = '<button onclick="setRankMode(\'node\')" class="rank-btn' + (rankMode === "node" ? " active" : "") + '">Por Node</button> ' +
+      '<button onclick="setRankMode(\'grupo\')" class="rank-btn' + (rankMode === "grupo" ? " active" : "") + '">Por Grupo</button> ' +
+      '<button onclick="setRankMode(\'regional\')" class="rank-btn' + (rankMode === "regional" ? " active" : "") + '">Por Regional</button>';
+  }
+
+  var scores = [];
+
+  if (rankMode === "node") {
+    var filtered = getFilteredNodes();
+    scores = filtered.map(function(nd) {
+      var d = getNodeData(nd, sem); var ex = getExtras(nd, sem);
+      if (!d) return null;
+      var rv = normPct(d.receive) || 0, sv = normPct(d.stow) || 0, dv = normPct(d.depart) || 0;
+      var rd = rv - 98.5, sd = sv - 99.5, dd = dv - 99.5;
+      var ov = ex ? normPct(ex.otd) : null, cv = ex ? normPct(ex.cpt) : null;
+      var od = ov !== null ? ov - 100 : null, cd = cv !== null ? cv - 100 : null;
+      var comps = [rd, sd, dd];
+      if (od !== null) comps.push(od);
+      if (cd !== null) comps.push(cd);
+      var score = comps.reduce(function(a, b) { return a + b; }, 0) / comps.length;
+      return { node: nd, name: nd, score: score, ppp: d.ppp || 0, vol: d.volume || 0,
+        regional: D.nodes[nd] ? D.nodes[nd].regional : "",
+        grupo: D.nodes[nd] ? D.nodes[nd].grupo : "",
+        recv: rv, stow: sv, dep: dv,
+        rd: rd, sd: sd, dd: dd, od: od, cd: cd };
+    }).filter(function(x) { return x !== null; });
+
+  } else if (rankMode === "grupo") {
+    var grupos = {};
+    Object.keys(D.nodes).forEach(function(nd) {
+      if (EXCLUDE_NODES.indexOf(nd) !== -1) return;
+      var cfg = D.nodes[nd];
+      var g = cfg.grupo;
+      if (!grupos[g]) grupos[g] = { recv: [], stow: [], dep: [], vol: 0, ppp: [] };
+      var d = cfg.semanas[sem];
+      if (!d) return;
+      if (d.receive !== null) grupos[g].recv.push({ v: d.receive, w: d.volume || 1 });
+      if (d.stow !== null) grupos[g].stow.push({ v: d.stow, w: d.volume || 1 });
+      if (d.depart !== null) grupos[g].dep.push({ v: d.depart, w: d.volume || 1 });
+      grupos[g].vol += d.volume || 0;
+      if (d.ppp > 0) grupos[g].ppp.push(d.ppp);
+    });
+    Object.keys(grupos).forEach(function(g) {
+      var gd = grupos[g];
+      var wAvg = function(arr) {
+        if (!arr.length) return 0;
+        var tw = 0, ws = 0;
+        arr.forEach(function(x) { ws += x.v * x.w; tw += x.w; });
+        return tw > 0 ? ws / tw : 0;
+      };
+      var rv = wAvg(gd.recv), sv = wAvg(gd.stow), dv = wAvg(gd.dep);
+      var rd = rv - 98.5, sd = sv - 99.5, dd = dv - 99.5;
+      var score = (rd + sd + dd) / 3;
+      var pppAvg = gd.ppp.length > 0 ? gd.ppp.reduce(function(a, b) { return a + b; }, 0) / gd.ppp.length : 0;
+      scores.push({ node: g, name: g, score: score, ppp: pppAvg, vol: gd.vol,
+        regional: "-", grupo: g, recv: rv, stow: sv, dep: dv,
+        rd: rd, sd: sd, dd: dd, od: null, cd: null });
+    });
+
+  } else {
+    // MODO REGIONAL: dados REAIS do D.regionais (com D+1 ja aplicado)
+    if (D.regionais) {
+      Object.keys(D.regionais).forEach(function(reg) {
+        var rd2 = D.regionais[reg].semanas[sem];
+        if (!rd2) return;
+        var rv = rd2.receive !== null ? rd2.receive : 0;
+        var sv = rd2.stow !== null ? rd2.stow : 0;
+        var dv = rd2.depart !== null ? rd2.depart : 0;
+        var rdGap = rv - 98.5, sdGap = sv - 99.5, ddGap = dv - 99.5;
+        var score = (rdGap + sdGap + ddGap) / 3;
+        scores.push({ node: reg, name: reg, score: score, ppp: rd2.ppp || 0, vol: rd2.volume || 0,
+          regional: reg, grupo: "-", recv: rv, stow: sv, dep: dv,
+          rd: rdGap, sd: sdGap, dd: ddGap, od: null, cd: null });
+      });
+    }
+  }
+
+  // Ordenar: score DESC, desempate Stow > Receive > Departure > Volume > PPP
+  scores.sort(function(a, b) {
+    if (Math.abs(b.score - a.score) > 0.001) return b.score - a.score;
+    if (Math.abs(b.sd - a.sd) > 0.001) return b.sd - a.sd;
+    if (Math.abs(b.rd - a.rd) > 0.001) return b.rd - a.rd;
+    if (Math.abs(b.dd - a.dd) > 0.001) return b.dd - a.dd;
+    if (b.vol !== a.vol) return b.vol - a.vol;
+    return b.ppp - a.ppp;
   });
 
-  var container=document.getElementById("podiumContainer");
-  container.innerHTML="";
-  var medals=["🥇","🥈","🥉"];
+  // PODIUM (Node e Grupo = podio + confetti | Regional = sem podio)
+  var container = document.getElementById("podiumContainer");
+  container.innerHTML = "";
 
-  function buildPodiumBlock(s,medal) {
-    return '<div class="podium-block">'
-      +'<div class="podium-medal">'+medal+'</div>'
-      +'<div class="podium-node">'+s.node+'</div>'
-      +'<div class="podium-score">'+( s.score>=0?"+":"")+s.score.toFixed(2)+' pp</div>'
-      +'<div class="podium-ppp">PPP: '+( s.ppp?Number(s.ppp).toFixed(0):"--")+'</div>'
-      +'</div>';
+  if (rankMode !== "regional" && scores.length >= 3) {
+    var medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+    function buildPodiumBlock(s, medal) {
+      return '<div class="podium-block">'
+        + '<div class="podium-medal">' + medal + '</div>'
+        + '<div class="podium-node">' + s.name + '</div>'
+        + '<div class="podium-score">' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + ' pp</div>'
+        + '<div class="podium-ppp">PPP: ' + (s.ppp > 0 ? Number(s.ppp).toFixed(0) : "--") + '</div>'
+        + '</div>';
+    }
+    if (scores.length >= 3) {
+      container.innerHTML = '<div class="podium-row">'
+        + buildPodiumBlock(scores[1], medals[1])
+        + buildPodiumBlock(scores[0], medals[0])
+        + buildPodiumBlock(scores[2], medals[2])
+        + '</div>';
+    }
+    if (typeof launchConfetti === "function") launchConfetti();
   }
 
-  if (scores.length===0) {
-    container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados.</p>';
-  } else if (scores.length===1) {
-    var el=document.createElement("div"); el.className="podium-item podium-1st";
-    el.innerHTML=buildPodiumBlock(scores[0],medals[0]); container.appendChild(el);
-  } else if (scores.length===2) {
-    [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x[1];
-      el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
-    });
+  // TABELA
+  var tbody = document.getElementById("rankTable");
+  var headerRow = tbody.parentNode.querySelector("thead tr");
+
+  // Atualizar headers conforme modo
+  if (rankMode === "node") {
+    headerRow.innerHTML = '<th>#</th><th>Node</th><th>Regional</th><th>Grupo</th>' +
+      '<th>Recv %</th><th>Stow %</th><th>Dep %</th>' +
+      '<th>Volume</th><th>PPP</th><th>Score</th>';
+  } else if (rankMode === "grupo") {
+    headerRow.innerHTML = '<th>#</th><th>Grupo</th>' +
+      '<th>Recv %</th><th>Stow %</th><th>Dep %</th>' +
+      '<th>Volume</th><th>PPP</th><th>Score</th>';
   } else {
-    [[scores[1],"podium-2nd",medals[1]],[scores[0],"podium-1st",medals[0]],[scores[2],"podium-3rd",medals[2]]].forEach(function(x) {
-      var el=document.createElement("div"); el.className="podium-item "+x[1];
-      el.innerHTML=buildPodiumBlock(x[0],x[2]); container.appendChild(el);
-    });
+    headerRow.innerHTML = '<th>#</th><th>Regional</th>' +
+      '<th>Recv %</th><th>Stow %</th><th>Dep %</th>' +
+      '<th>Volume</th><th>PPP</th><th>Score</th>';
   }
 
-  // Tabela com coluna Regional
-  var tbody=document.getElementById("rankTable");
-  tbody.innerHTML=scores.map(function(s,i) {
-    function fmtGap(v){return v===null?"-":(v>=0?"+":"")+v.toFixed(2);}
-    return '<tr>'
-      +'<td><b>'+( i+1)+'</b></td>'
-      +'<td><span class="node-tag" style="background:'+nodeColor(s.node)+'22;color:'+nodeColor(s.node)+'">'+s.node+'</span></td>'
-      +'<td>'+s.regional+'</td>'
-      +'<td>'+s.grupo+'</td>'
-      +'<td class="'+( s.rd>=0?"ok":"miss")+'">'+fmtGap(s.rd)+'</td>'
-      +'<td class="'+( s.sd>=0?"ok":"miss")+'">'+fmtGap(s.sd)+'</td>'
-      +'<td class="'+( s.dd>=0?"ok":"miss")+'">'+fmtGap(s.dd)+'</td>'
-      +'<td class="'+( s.od!==null?s.od>=0?"ok":"miss":"")+'">'+fmtGap(s.od)+'</td>'
-      +'<td class="'+( s.cd!==null?s.cd>=0?"ok":"miss":"")+'">'+fmtGap(s.cd)+'</td>'
-      +'<td><b>'+( s.score>=0?"+":"")+s.score.toFixed(2)+' pp</b></td>'
-      +'</tr>';
-  }).join("");
+  tbody.innerHTML = scores.map(function(s, i) {
+    var recvClass = s.recv >= 98.5 ? "kpi-hit" : "kpi-miss";
+    var stowClass = s.stow >= 99.5 ? "kpi-hit" : "kpi-miss";
+    var depClass = s.dep >= 99.5 ? "kpi-hit" : "kpi-miss";
+    var pppDisplay = s.ppp > 0 ? Number(s.ppp).toFixed(1) : "-";
 
-  setTimeout(function(){launchConfetti();},600);
+    var row = '<tr><td>' + (i + 1) + '</td><td><b>' + s.name + '</b></td>';
+    if (rankMode === "node") row += '<td>' + s.regional + '</td><td>' + s.grupo + '</td>';
+    row += '<td class="' + recvClass + '">' + s.recv.toFixed(2) + '%</td>' +
+      '<td class="' + stowClass + '">' + s.stow.toFixed(2) + '%</td>' +
+      '<td class="' + depClass + '">' + s.dep.toFixed(2) + '%</td>' +
+      '<td>' + s.vol.toLocaleString() + '</td>' +
+      '<td>' + pppDisplay + '</td>' +
+      '<td>' + (s.score >= 0 ? "+" : "") + s.score.toFixed(2) + '</td></tr>';
+    return row;
+  }).join("");
+}
+
+function setRankMode(mode) {
+  window._rankMode = mode;
+  renderRanking();
+}
+       
+function renderResumoRegionais() {
+  var container = document.getElementById("resumoRegionaisContainer");
+  if (!container || !D.regionais) return;
+  container.innerHTML = "";
+
+  var regionais = Object.keys(D.regionais);
+  var semanas = D.semanas;
+  var regColors = { "DF-SUL": "#e74c3c", "RIMES-NE": "#3498db", "SP CAP": "#2ecc71", "SP INT": "#9b59b6" };
+
+  var charts = [
+    { title: "Receive % por Regional", field: "receive", meta: D.metas.recv, unit: "%" },
+    { title: "Stow % por Regional", field: "stow", meta: D.metas.stow, unit: "%" },
+    { title: "Departure % por Regional", field: "depart", meta: D.metas.dep, unit: "%" },
+    { title: "PPP por Regional", field: "ppp", meta: D.metas.ppp, unit: "" },
+    { title: "TPH por Regional", field: "tph", meta: null, unit: "" }
+  ];
+
+  charts.forEach(function(chart) {
+    var series = [];
+    regionais.forEach(function(reg) {
+      var data = [];
+      semanas.forEach(function(sem) {
+        var rd = D.regionais[reg].semanas[sem];
+        data.push(rd && rd[chart.field] !== undefined && rd[chart.field] !== null ? rd[chart.field] : null);
+      });
+      series.push({ name: reg, data: data, color: regColors[reg] || "#666" });
+    });
+
+    var chartDiv = document.createElement("div");
+    chartDiv.style.marginBottom = "32px";
+    container.appendChild(chartDiv);
+
+    renderLineChart(chartDiv, chart.title, semanas, series, chart.meta, chart.unit);
+  });
 }
 
 // Confetti animation
@@ -978,6 +1168,7 @@ function renderAll() {
     function(nd,s){var e=getExtras(nd,s);return e?normPct(e.cpt):null;},100);
   else if (tab==="tendencia") renderTendencia();
   else if (tab==="ranking") renderRanking();
+  else if (tab==="resumoRegionais") renderResumoRegionais();
 }
 
 document.addEventListener("DOMContentLoaded",init);
