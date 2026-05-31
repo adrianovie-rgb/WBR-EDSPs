@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1127,102 +1128,156 @@ window.setRankMode = function(mode) {
 // ============================================================
 // RESUMO REGIONAIS: 5 graficos (Receive, Stow, Departure, PPP, TPH)
 // ============================================================
-function renderRegionalChart(container, title, semanas, series, meta, unit) {
-  var PAD_L=70,PAD_R=150,PAD_T=40,PAD_B=55,W=900,H=300;
-  var chartW=W-PAD_L-PAD_R,chartH=H-PAD_T-PAD_B;
 
-  var svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("viewBox","0 0 "+W+" "+H);
-  svg.setAttribute("width","100%");
-  svg.style.maxWidth=W+"px";
-  svg.style.display="block";
-  svg.style.margin="0 auto";
-  container.appendChild(svg);
+function renderRegionalChart(container, title, subtitle, semanas, series, meta, unit) {
+  // Wrap in .chart-container div with H3 title + .chart-meta subtitle outside SVG
+  var wrapper = document.createElement('div');
+  wrapper.className = 'chart-container';
 
-  // Title
-  var titleEl='<text x="'+W/2+'" y="18" text-anchor="middle" font-size="13" font-weight="600" fill="#1e293b">'+title+'</text>';
+  var h3 = document.createElement('h3');
+  h3.textContent = title;
+  wrapper.appendChild(h3);
 
-  var allVals=[];
-  series.forEach(function(s){s.data.forEach(function(v){if(v!==null)allVals.push(v);});});
-  if(meta!==null&&meta!==undefined)allVals.push(meta);
-  if(allVals.length===0){svg.innerHTML='<text x="450" y="150" text-anchor="middle" fill="#64748b">Sem dados</text>';return;}
+  var metaDiv = document.createElement('div');
+  metaDiv.className = 'chart-meta';
+  metaDiv.textContent = subtitle;
+  wrapper.appendChild(metaDiv);
 
-  var minVal=Math.min.apply(null,allVals),maxVal=Math.max.apply(null,allVals);
-  var range=maxVal-minVal;if(range===0)range=1;
-  var pad=range*0.15;minVal-=pad;maxVal+=pad;range=maxVal-minVal;
+  container.appendChild(wrapper);
 
-  function xPos(i){return PAD_L+(i/Math.max(semanas.length-1,1))*chartW;}
-  function yPos(v){return PAD_T+chartH-((v-minVal)/range)*chartH;}
+  var PAD_L=70, PAD_R=160, PAD_T=20, PAD_B=55, W=900, H=300;
+  var chartW=W-PAD_L-PAD_R, chartH=H-PAD_T-PAD_B;
 
-  var html=titleEl;
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
+  svg.setAttribute('width', '100%');
+  svg.style.display = 'block';
+  svg.style.margin = '0 auto';
+  wrapper.appendChild(svg);
 
-  // Grid
-  for(var gi=0;gi<=4;gi++){
-    var gv=minVal+(range/4)*gi,gy=yPos(gv);
-    var lbl=unit==="%"?gv.toFixed(1)+"%":gv.toFixed(0);
+  var allVals = [];
+  series.forEach(function(s){ s.data.forEach(function(v){ if(v!==null) allVals.push(v); }); });
+  if(meta!==null && meta!==undefined) allVals.push(meta);
+  if(allVals.length===0){
+    svg.innerHTML='<text x="450" y="150" text-anchor="middle" fill="#64748b">Sem dados</text>';
+    return;
+  }
+
+  var minVal=Math.min.apply(null,allVals), maxVal=Math.max.apply(null,allVals);
+  var range=maxVal-minVal; if(range===0) range=1;
+  var pad=range*0.18; minVal-=pad; maxVal+=pad; range=maxVal-minVal;
+
+  function xPos(i){ return PAD_L+(i/Math.max(semanas.length-1,1))*chartW; }
+  function yPos(v){ return PAD_T+chartH-((v-minVal)/range)*chartH; }
+
+  var html='';
+
+  // Grid lines + Y labels
+  for(var gi=0; gi<=4; gi++){
+    var gv=minVal+(range/4)*gi, gy=yPos(gv);
+    var lbl=unit==='%' ? gv.toFixed(1)+'%' : gv.toFixed(0);
     html+='<line x1="'+PAD_L+'" y1="'+gy+'" x2="'+(W-PAD_R)+'" y2="'+gy+'" stroke="#e2e8f0" stroke-width="1"/>';
     html+='<text x="'+(PAD_L-6)+'" y="'+(gy+4)+'" font-size="9" fill="#64748b" text-anchor="end">'+lbl+'</text>';
   }
 
-  // X labels
+  // X axis labels
   semanas.forEach(function(s,i){
     html+='<text x="'+xPos(i)+'" y="'+(H-PAD_B+16)+'" font-size="10" fill="#64748b" text-anchor="middle">'+s+'</text>';
   });
 
-  // Meta line
-  if(meta!==null&&meta!==undefined){
+  // Meta dashed red line with label 'Meta (X)' format
+  if(meta!==null && meta!==undefined){
     var my=yPos(meta);
     html+='<line x1="'+PAD_L+'" y1="'+my+'" x2="'+(W-PAD_R)+'" y2="'+my+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    html+='<text x="'+(W-PAD_R+4)+'" y="'+(my+4)+'" font-size="9" fill="#ef4444" font-weight="600">Meta '+meta+'</text>';
+    html+='<text x="'+(W-PAD_R+4)+'" y="'+(my+4)+'" font-size="9" fill="#ef4444" font-weight="600">Meta ('+meta+')</text>';
   }
 
-  // Series lines + labels
+  // Draw series lines first
   series.forEach(function(s){
     var points=[];
-    s.data.forEach(function(v,i){if(v!==null)points.push({x:xPos(i),y:yPos(v),v:v});});
-    if(points.length<2)return;
+    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
+    if(points.length<2) return;
+    var pathD='M'+points.map(function(p){ return p.x+','+p.y; }).join('L');
+    html+='<path d="'+pathD+'" fill="none" stroke="'+s.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+  });
 
-    var pathD="M"+points.map(function(p){return p.x+","+p.y;}).join("L");
-    html+='<path d="'+pathD+'" fill="none" stroke="'+s.color+'" stroke-width="2.5"/>';
-
+  // Draw dots with white stroke border
+  series.forEach(function(s){
+    var points=[];
+    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
     points.forEach(function(p){
-      html+='<circle cx="'+p.x+'" cy="'+p.y+'" r="3.5" fill="'+s.color+'"/>';
-      var lbl=unit==="%"?p.v.toFixed(1)+"%":p.v.toFixed(0);
+      html+='<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="'+s.color+'" stroke="#fff" stroke-width="2"/>';
+    });
+  });
+
+  // Labels on ALL data points, positioned above dots
+  series.forEach(function(s){
+    var points=[];
+    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
+    points.forEach(function(p){
+      var lbl=unit==='%' ? p.v.toFixed(1)+'%' : p.v.toFixed(0);
       html+='<text x="'+p.x+'" y="'+(p.y-8)+'" font-size="8" fill="'+s.color+'" text-anchor="middle" font-weight="600">'+lbl+'</text>';
     });
   });
 
-  // Legend
-  var ly=PAD_T+10;
+  // Legend on right side: line+dot entries + Meta dashed red
+  var legendX = W-PAD_R+12;
+  var legendY = PAD_T+8;
+  var rowH = 20;
   series.forEach(function(s,i){
-    var lx=W-PAD_R+10;
-    html+='<rect x="'+lx+'" y="'+(ly+i*18)+'" width="12" height="12" rx="2" fill="'+s.color+'"/>';
-    html+='<text x="'+(lx+16)+'" y="'+(ly+i*18+10)+'" font-size="10" fill="#1e293b">'+s.name+'</text>';
+    var ly2 = legendY + i*rowH;
+    // Line segment
+    html+='<line x1="'+legendX+'" y1="'+(ly2+6)+'" x2="'+(legendX+18)+'" y2="'+(ly2+6)+'" stroke="'+s.color+'" stroke-width="2.5"/>';
+    // Dot
+    html+='<circle cx="'+(legendX+9)+'" cy="'+(ly2+6)+'" r="4" fill="'+s.color+'" stroke="#fff" stroke-width="2"/>';
+    // Label
+    html+='<text x="'+(legendX+24)+'" y="'+(ly2+10)+'" font-size="10" fill="#1e293b">'+s.name+'</text>';
   });
+  // Meta legend entry
+  if(meta!==null && meta!==undefined){
+    var mly = legendY + series.length*rowH + 4;
+    html+='<line x1="'+legendX+'" y1="'+(mly+6)+'" x2="'+(legendX+18)+'" y2="'+(mly+6)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>';
+    var metaLegTxt = unit==='%' ? 'Meta ('+meta+')' : 'Meta ('+meta+')';
+    html+='<text x="'+(legendX+24)+'" y="'+(mly+10)+'" font-size="10" fill="#ef4444">'+metaLegTxt+'</text>';
+  }
 
-  svg.innerHTML=html;
+  svg.innerHTML = html;
 }
 
 function renderResumoRegionais() {
-  var container = document.getElementById("resumoRegionaisContainer");
+  var container = document.getElementById('resumoRegionaisContainer');
   if (!container || !D.regionais) {
     if (container) container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados regionais.</p>';
     return;
   }
-  container.innerHTML = "";
+  container.innerHTML = '';
+
   var semanas = D.semanas;
   var regionais = Object.keys(D.regionais);
-  var filtroSemReg = document.getElementById("filtroSemanasReg");
+  var filtroSemReg = document.getElementById('filtroSemanasReg');
   var nSem = filtroSemReg ? parseInt(filtroSemReg.value) : 6;
   var semsToUse = nSem > 0 ? semanas.slice(-nSem) : semanas;
-  var regColors = {"DF-SUL":"#e74c3c","RIMES-NE":"#3498db","SP CAP":"#2ecc71","SP INT":"#9b59b6"};
+
+  // regColors matching image-47: First Mile=navy, DF-SUL=purple, SP CAP=gray, SP INT=orange, RIMES-NE=green
+  var regColors = {
+    'First Mile': '#1e3a5f',
+    'DF-SUL':     '#7c3aed',
+    'SP CAP':     '#6b7280',
+    'SP INT':     '#f97316',
+    'RIMES-NE':   '#10b981'
+  };
 
   var charts = [
-    {title:"Receive % por Regional", field:"receive", meta:D.metas.recv, unit:"%"},
-    {title:"Stow % por Regional", field:"stow", meta:D.metas.stow, unit:"%"},
-    {title:"Departure % por Regional", field:"depart", meta:D.metas.dep, unit:"%"},
-    {title:"PPP por Regional", field:"ppp", meta:D.metas.ppp, unit:""},
-    {title:"TPH por Regional", field:"tph", meta:null, unit:""}
+    {title:'Receive Success % - Todas as Regionais', subtitle:'Meta: >=98.5%',
+     field:'receive', meta:D.metas.recv, unit:'%'},
+    {title:'Stow Success % - Todas as Regionais', subtitle:'Meta: >=99.5%',
+     field:'stow', meta:D.metas.stow, unit:'%'},
+    {title:'Departure Success % - Todas as Regionais', subtitle:'Meta: >=99.5%',
+     field:'depart', meta:D.metas.dep, unit:'%'},
+    {title:'PPP - Todas as Regionais', subtitle:'Meta: >=175',
+     field:'ppp', meta:D.metas.ppp, unit:''},
+    {title:'TPH - Todas as Regionais', subtitle:'Throughput por Hora',
+     field:'tph', meta:null, unit:''}
   ];
 
   charts.forEach(function(chart) {
@@ -1233,14 +1288,14 @@ function renderResumoRegionais() {
         var rd = D.regionais[reg].semanas[sem];
         data.push(rd && rd[chart.field] !== undefined && rd[chart.field] !== null ? rd[chart.field] : null);
       });
-      series.push({name:reg, data:data, color:regColors[reg]||"#666"});
+      series.push({name: reg, data: data, color: regColors[reg] || '#666'});
     });
 
-    var chartDiv = document.createElement("div");
-    chartDiv.style.marginBottom = "32px";
+    var chartDiv = document.createElement('div');
+    chartDiv.style.marginBottom = '32px';
     container.appendChild(chartDiv);
 
-    renderRegionalChart(chartDiv, chart.title, semsToUse, series, chart.meta, chart.unit);
+    renderRegionalChart(chartDiv, chart.title, chart.subtitle, semsToUse, series, chart.meta, chart.unit);
   });
 }
 
