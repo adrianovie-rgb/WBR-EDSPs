@@ -1129,120 +1129,105 @@ window.setRankMode = function(mode) {
 // RESUMO REGIONAIS: 5 graficos (Receive, Stow, Departure, PPP, TPH)
 // ============================================================
 
+
 function renderRegionalChart(container, title, subtitle, semanas, series, meta, unit) {
-  // Wrap in .chart-container div with H3 title + .chart-meta subtitle outside SVG
-  var wrapper = document.createElement('div');
-  wrapper.className = 'chart-container';
-
-  var h3 = document.createElement('h3');
-  h3.textContent = title;
-  wrapper.appendChild(h3);
-
-  var metaDiv = document.createElement('div');
-  metaDiv.className = 'chart-meta';
-  metaDiv.textContent = subtitle;
-  wrapper.appendChild(metaDiv);
-
-  container.appendChild(wrapper);
-
-  var PAD_L=70, PAD_R=160, PAD_T=20, PAD_B=55, W=900, H=300;
-  var chartW=W-PAD_L-PAD_R, chartH=H-PAD_T-PAD_B;
-
-  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 '+W+' '+H);
-  svg.setAttribute('width', '100%');
-  svg.style.display = 'block';
-  svg.style.margin = '0 auto';
-  wrapper.appendChild(svg);
+  var W = container.clientWidth || 900;
+  var H = 380;
+  var pad = {top: 60, right: 180, bottom: 50, left: 60};
+  var cw = W - pad.left - pad.right;
+  var ch = H - pad.top - pad.bottom;
 
   var allVals = [];
-  series.forEach(function(s){ s.data.forEach(function(v){ if(v!==null) allVals.push(v); }); });
-  if(meta!==null && meta!==undefined) allVals.push(meta);
-  if(allVals.length===0){
-    svg.innerHTML='<text x="450" y="150" text-anchor="middle" fill="#64748b">Sem dados</text>';
+  series.forEach(function(s) {
+    s.data.forEach(function(v) { if (v !== null && v !== undefined) allVals.push(v); });
+  });
+  if (meta !== null && meta !== undefined) allVals.push(meta);
+  if (allVals.length === 0) {
+    container.innerHTML = '<p style="color:#94a3b8;padding:20px">Sem dados para ' + title + '</p>';
     return;
   }
 
-  var minVal=Math.min.apply(null,allVals), maxVal=Math.max.apply(null,allVals);
-  var range=maxVal-minVal; if(range===0) range=1;
-  var pad=range*0.18; minVal-=pad; maxVal+=pad; range=maxVal-minVal;
+  var yMin = Math.floor(Math.min.apply(null, allVals) - 1);
+  var yMax = Math.ceil(Math.max.apply(null, allVals) + 1);
+  if (yMax - yMin < 4) { yMin -= 2; yMax += 2; }
 
-  function xPos(i){ return PAD_L+(i/Math.max(semanas.length-1,1))*chartW; }
-  function yPos(v){ return PAD_T+chartH-((v-minVal)/range)*chartH; }
+  function xPos(i) { return pad.left + (i / (semanas.length - 1 || 1)) * cw; }
+  function yPos(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * ch; }
 
-  var html='';
+  var svg = '<svg width="' + W + '" height="' + H + '" style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">';
 
-  // Grid lines + Y labels
-  for(var gi=0; gi<=4; gi++){
-    var gv=minVal+(range/4)*gi, gy=yPos(gv);
-    var lbl=unit==='%' ? gv.toFixed(1)+'%' : gv.toFixed(0);
-    html+='<line x1="'+PAD_L+'" y1="'+gy+'" x2="'+(W-PAD_R)+'" y2="'+gy+'" stroke="#e2e8f0" stroke-width="1"/>';
-    html+='<text x="'+(PAD_L-6)+'" y="'+(gy+4)+'" font-size="9" fill="#64748b" text-anchor="end">'+lbl+'</text>';
+  // Title
+  svg += '<text x="' + (pad.left + cw/2) + '" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">' + title + '</text>';
+  if (subtitle) {
+    svg += '<text x="' + (pad.left + cw/2) + '" y="40" text-anchor="middle" font-size="11" fill="#64748b">' + subtitle + '</text>';
   }
 
-  // X axis labels
-  semanas.forEach(function(s,i){
-    html+='<text x="'+xPos(i)+'" y="'+(H-PAD_B+16)+'" font-size="10" fill="#64748b" text-anchor="middle">'+s+'</text>';
-  });
-
-  // Meta dashed red line with label 'Meta (X)' format
-  if(meta!==null && meta!==undefined){
-    var my=yPos(meta);
-    html+='<line x1="'+PAD_L+'" y1="'+my+'" x2="'+(W-PAD_R)+'" y2="'+my+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    html+='<text x="'+(W-PAD_R+4)+'" y="'+(my+4)+'" font-size="9" fill="#ef4444" font-weight="600">Meta ('+meta+')</text>';
+  // Grid lines
+  var ySteps = 5;
+  var yStep = (yMax - yMin) / ySteps;
+  for (var g = 0; g <= ySteps; g++) {
+    var yv = yMin + g * yStep;
+    var gy = yPos(yv);
+    svg += '<line x1="' + pad.left + '" y1="' + gy + '" x2="' + (pad.left + cw) + '" y2="' + gy + '" stroke="#f1f5f9" stroke-width="1"/>';
+    svg += '<text x="' + (pad.left - 8) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + yv.toFixed(1) + '</text>';
   }
 
-  // Draw series lines first
-  series.forEach(function(s){
-    var points=[];
-    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
-    if(points.length<2) return;
-    var pathD='M'+points.map(function(p){ return p.x+','+p.y; }).join('L');
-    html+='<path d="'+pathD+'" fill="none" stroke="'+s.color+'" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
-  });
+  // X-axis labels
+  for (var xi = 0; xi < semanas.length; xi++) {
+    var xx = xPos(xi);
+    svg += '<text x="' + xx + '" y="' + (H - pad.bottom + 20) + '" text-anchor="middle" font-size="10" fill="#64748b">' + semanas[xi] + '</text>';
+  }
 
-  // Draw dots with white stroke border
-  series.forEach(function(s){
-    var points=[];
-    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
-    points.forEach(function(p){
-      html+='<circle cx="'+p.x+'" cy="'+p.y+'" r="4" fill="'+s.color+'" stroke="#fff" stroke-width="2"/>';
+  // Meta dashed line (red)
+  if (meta !== null && meta !== undefined) {
+    var my = yPos(meta);
+    svg += '<line x1="' + pad.left + '" y1="' + my + '" x2="' + (pad.left + cw) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
+    svg += '<text x="' + (pad.left + cw + 4) + '" y="' + (my + 4) + '" font-size="9" fill="#ef4444">Meta ' + meta + (unit || '') + '</text>';
+  }
+
+  // Data lines + points + labels
+  series.forEach(function(s) {
+    var path = '';
+    var points = [];
+    for (var i = 0; i < s.data.length; i++) {
+      if (s.data[i] === null || s.data[i] === undefined) continue;
+      var px = xPos(i);
+      var py = yPos(s.data[i]);
+      if (path === '') path = 'M' + px + ',' + py;
+      else path += ' L' + px + ',' + py;
+      points.push({x: px, y: py, val: s.data[i]});
+    }
+    if (path) {
+      svg += '<path d="' + path + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+    }
+
+    // Points and labels
+    points.forEach(function(pt) {
+      svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + s.color + '" stroke="#fff" stroke-width="1.5"/>';
+      var labelY = pt.y - 10;
+      var labelVal = unit === '%' ? pt.val.toFixed(1) : (pt.val >= 100 ? pt.val.toFixed(0) : pt.val.toFixed(1));
+      svg += '<text x="' + pt.x + '" y="' + labelY + '" text-anchor="middle" font-size="10" font-weight="600" fill="' + s.color + '">' + labelVal + '</text>';
     });
   });
 
-  // Labels on ALL data points, positioned above dots
-  series.forEach(function(s){
-    var points=[];
-    s.data.forEach(function(v,i){ if(v!==null) points.push({x:xPos(i),y:yPos(v),v:v}); });
-    points.forEach(function(p){
-      var lbl=unit==='%' ? p.v.toFixed(1)+'%' : p.v.toFixed(0);
-      html+='<text x="'+p.x+'" y="'+(p.y-8)+'" font-size="8" fill="'+s.color+'" text-anchor="middle" font-weight="600">'+lbl+'</text>';
-    });
+  // Legend (right side)
+  var legendX = pad.left + cw + 20;
+  var legendY = pad.top + 10;
+  series.forEach(function(s, idx) {
+    var ly = legendY + idx * 22;
+    svg += '<rect x="' + legendX + '" y="' + (ly - 6) + '" width="14" height="3" rx="1.5" fill="' + s.color + '"/>';
+    svg += '<text x="' + (legendX + 20) + '" y="' + ly + '" font-size="10" fill="#334155">' + s.name + '</text>';
   });
-
-  // Legend on right side: line+dot entries + Meta dashed red
-  var legendX = W-PAD_R+12;
-  var legendY = PAD_T+8;
-  var rowH = 20;
-  series.forEach(function(s,i){
-    var ly2 = legendY + i*rowH;
-    // Line segment
-    html+='<line x1="'+legendX+'" y1="'+(ly2+6)+'" x2="'+(legendX+18)+'" y2="'+(ly2+6)+'" stroke="'+s.color+'" stroke-width="2.5"/>';
-    // Dot
-    html+='<circle cx="'+(legendX+9)+'" cy="'+(ly2+6)+'" r="4" fill="'+s.color+'" stroke="#fff" stroke-width="2"/>';
-    // Label
-    html+='<text x="'+(legendX+24)+'" y="'+(ly2+10)+'" font-size="10" fill="#1e293b">'+s.name+'</text>';
-  });
-  // Meta legend entry
-  if(meta!==null && meta!==undefined){
-    var mly = legendY + series.length*rowH + 4;
-    html+='<line x1="'+legendX+'" y1="'+(mly+6)+'" x2="'+(legendX+18)+'" y2="'+(mly+6)+'" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>';
-    var metaLegTxt = unit==='%' ? 'Meta ('+meta+')' : 'Meta ('+meta+')';
-    html+='<text x="'+(legendX+24)+'" y="'+(mly+10)+'" font-size="10" fill="#ef4444">'+metaLegTxt+'</text>';
+  if (meta !== null && meta !== undefined) {
+    var mly = legendY + series.length * 22;
+    svg += '<line x1="' + legendX + '" y1="' + (mly - 3) + '" x2="' + (legendX + 14) + '" y2="' + (mly - 3) + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>';
+    svg += '<text x="' + (legendX + 20) + '" y="' + mly + '" font-size="10" fill="#ef4444">Meta (' + meta + ')</text>';
   }
 
-  svg.innerHTML = html;
+  svg += '</svg>';
+  container.innerHTML = svg;
 }
+
 
 function renderResumoRegionais() {
   var container = document.getElementById('resumoRegionaisContainer');
