@@ -1131,9 +1131,9 @@ window.setRankMode = function(mode) {
 
 
 function renderRegionalChart(container, title, subtitle, semanas, series, meta, unit) {
-  var W = container.clientWidth || 900;
-  var H = 380;
-  var pad = {top: 60, right: 180, bottom: 50, left: 60};
+  var W = Math.max(container.clientWidth || 900, 800);
+  var H = 400;
+  var pad = {top: 55, right: 170, bottom: 55, left: 55};
   var cw = W - pad.left - pad.right;
   var ch = H - pad.top - pad.bottom;
 
@@ -1143,49 +1143,52 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
   });
   if (meta !== null && meta !== undefined) allVals.push(meta);
   if (allVals.length === 0) {
-    container.innerHTML = '<p style="color:#94a3b8;padding:20px">Sem dados para ' + title + '</p>';
+    container.innerHTML = '<p style="color:#94a3b8;padding:20px;text-align:center">Sem dados para ' + title + '</p>';
     return;
   }
+  var dataMin = Math.min.apply(null, allVals);
+  var dataMax = Math.max.apply(null, allVals);
+  var margin = (dataMax - dataMin) * 0.12 || 2;
+  var yMin = Math.floor(dataMin - margin);
+  var yMax = Math.ceil(dataMax + margin);
 
-  var yMin = Math.floor(Math.min.apply(null, allVals) - 1);
-  var yMax = Math.ceil(Math.max.apply(null, allVals) + 1);
-  if (yMax - yMin < 4) { yMin -= 2; yMax += 2; }
-
-  function xPos(i) { return pad.left + (i / (semanas.length - 1 || 1)) * cw; }
+  function xPos(i) { return pad.left + (semanas.length > 1 ? (i / (semanas.length - 1)) * cw : cw / 2); }
   function yPos(v) { return pad.top + (1 - (v - yMin) / (yMax - yMin)) * ch; }
 
-  var svg = '<svg width="' + W + '" height="' + H + '" style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.06)">';
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" style="display:block;background:#ffffff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:8px">';
 
-  // Title
-  svg += '<text x="' + (pad.left + cw/2) + '" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">' + title + '</text>';
+  // Titulo + Subtitulo
+  svg += '<text x="' + (W / 2) + '" y="24" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="15" font-weight="700" fill="#1e293b">' + title + '</text>';
   if (subtitle) {
-    svg += '<text x="' + (pad.left + cw/2) + '" y="40" text-anchor="middle" font-size="11" fill="#64748b">' + subtitle + '</text>';
+    svg += '<text x="' + (W / 2) + '" y="43" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#64748b">' + subtitle + '</text>';
   }
 
-  // Grid lines
-  var ySteps = 5;
-  var yStep = (yMax - yMin) / ySteps;
-  for (var g = 0; g <= ySteps; g++) {
-    var yv = yMin + g * yStep;
-    var gy = yPos(yv);
-    svg += '<line x1="' + pad.left + '" y1="' + gy + '" x2="' + (pad.left + cw) + '" y2="' + gy + '" stroke="#f1f5f9" stroke-width="1"/>';
-    svg += '<text x="' + (pad.left - 8) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">' + yv.toFixed(1) + '</text>';
+  // Grid horizontal
+  var nGrid = 6;
+  var gridStep = (yMax - yMin) / nGrid;
+  for (var g = 0; g <= nGrid; g++) {
+    var gv = yMin + g * gridStep;
+    var gy = yPos(gv);
+    svg += '<line x1="' + pad.left + '" y1="' + gy + '" x2="' + (pad.left + cw) + '" y2="' + gy + '" stroke="#e2e8f0" stroke-width="0.7"/>';
+    svg += '<text x="' + (pad.left - 10) + '" y="' + (gy + 4) + '" text-anchor="end" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#94a3b8">' + gv.toFixed(1) + '</text>';
   }
 
-  // X-axis labels
+  // Eixo X: semanas + label "Semanas"
   for (var xi = 0; xi < semanas.length; xi++) {
     var xx = xPos(xi);
-    svg += '<text x="' + xx + '" y="' + (H - pad.bottom + 20) + '" text-anchor="middle" font-size="10" fill="#64748b">' + semanas[xi] + '</text>';
+    svg += '<line x1="' + xx + '" y1="' + (pad.top + ch) + '" x2="' + xx + '" y2="' + (pad.top + ch + 5) + '" stroke="#cbd5e1" stroke-width="0.7"/>';
+    svg += '<text x="' + xx + '" y="' + (pad.top + ch + 20) + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#475569">' + semanas[xi] + '</text>';
   }
+  svg += '<text x="' + (pad.left + cw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#94a3b8">Semanas</text>';
 
-  // Meta dashed line (red)
+  // Meta: linha tracejada vermelha
   if (meta !== null && meta !== undefined) {
     var my = yPos(meta);
-    svg += '<line x1="' + pad.left + '" y1="' + my + '" x2="' + (pad.left + cw) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    svg += '<text x="' + (pad.left + cw + 4) + '" y="' + (my + 4) + '" font-size="9" fill="#ef4444">Meta ' + meta + (unit || '') + '</text>';
+    svg += '<line x1="' + pad.left + '" y1="' + my + '" x2="' + (pad.left + cw) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="8,5" opacity="0.85"/>';
   }
 
-  // Data lines + points + labels
+  // Linhas de dados + pontos + labels com collision detection
+  var allLabels = [];
   series.forEach(function(s) {
     var path = '';
     var points = [];
@@ -1195,93 +1198,56 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
       var py = yPos(s.data[i]);
       if (path === '') path = 'M' + px + ',' + py;
       else path += ' L' + px + ',' + py;
-      points.push({x: px, y: py, val: s.data[i]});
+      points.push({x: px, y: py, val: s.data[i], color: s.color});
     }
     if (path) {
       svg += '<path d="' + path + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
     }
-
-    // Points and labels
     points.forEach(function(pt) {
-      svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + s.color + '" stroke="#fff" stroke-width="1.5"/>';
-      var labelY = pt.y - 10;
-      var labelVal = unit === '%' ? pt.val.toFixed(1) : (pt.val >= 100 ? pt.val.toFixed(0) : pt.val.toFixed(1));
-      svg += '<text x="' + pt.x + '" y="' + labelY + '" text-anchor="middle" font-size="10" font-weight="600" fill="' + s.color + '">' + labelVal + '</text>';
+      svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="5" fill="' + pt.color + '" stroke="#fff" stroke-width="2"/>';
+      allLabels.push(pt);
     });
   });
 
-  // Legend (right side)
-  var legendX = pad.left + cw + 20;
-  var legendY = pad.top + 10;
+  // Labels com collision detection
+  allLabels.sort(function(a, b) { return a.x - b.x || a.y - b.y; });
+  var placed = [];
+  allLabels.forEach(function(pt) {
+    var labelVal = unit === '%' ? pt.val.toFixed(1) : (pt.val >= 1000 ? Math.round(pt.val).toString() : pt.val.toFixed(1));
+    var ly = pt.y - 14;
+    var collides = false;
+    for (var p = 0; p < placed.length; p++) {
+      if (Math.abs(placed[p].x - pt.x) < 32 && Math.abs(placed[p].y - ly) < 14) {
+        collides = true; break;
+      }
+    }
+    if (collides) ly = pt.y + 18;
+    for (var p2 = 0; p2 < placed.length; p2++) {
+      if (Math.abs(placed[p2].x - pt.x) < 32 && Math.abs(placed[p2].y - ly) < 14) {
+        ly = pt.y + 32; break;
+      }
+    }
+    svg += '<text x="' + pt.x + '" y="' + ly + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="10" font-weight="700" fill="' + pt.color + '">' + labelVal + '</text>';
+    placed.push({x: pt.x, y: ly});
+  });
+
+  // Legenda (direita) com linha + circulo + nome
+  var lx = pad.left + cw + 18;
+  var ly2 = pad.top + 20;
   series.forEach(function(s, idx) {
-    var ly = legendY + idx * 22;
-    svg += '<rect x="' + legendX + '" y="' + (ly - 6) + '" width="14" height="3" rx="1.5" fill="' + s.color + '"/>';
-    svg += '<text x="' + (legendX + 20) + '" y="' + ly + '" font-size="10" fill="#334155">' + s.name + '</text>';
+    var lyi = ly2 + idx * 26;
+    svg += '<line x1="' + lx + '" y1="' + lyi + '" x2="' + (lx + 22) + '" y2="' + lyi + '" stroke="' + s.color + '" stroke-width="3" stroke-linecap="round"/>';
+    svg += '<circle cx="' + (lx + 11) + '" cy="' + lyi + '" r="3.5" fill="' + s.color + '"/>';
+    svg += '<text x="' + (lx + 28) + '" y="' + (lyi + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#334155">' + s.name + '</text>';
   });
   if (meta !== null && meta !== undefined) {
-    var mly = legendY + series.length * 22;
-    svg += '<line x1="' + legendX + '" y1="' + (mly - 3) + '" x2="' + (legendX + 14) + '" y2="' + (mly - 3) + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,3"/>';
-    svg += '<text x="' + (legendX + 20) + '" y="' + mly + '" font-size="10" fill="#ef4444">Meta (' + meta + ')</text>';
+    var mly = ly2 + series.length * 26;
+    svg += '<line x1="' + lx + '" y1="' + mly + '" x2="' + (lx + 22) + '" y2="' + mly + '" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>';
+    svg += '<text x="' + (lx + 28) + '" y="' + (mly + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#ef4444">Meta</text>';
   }
 
   svg += '</svg>';
   container.innerHTML = svg;
-}
-
-
-function renderResumoRegionais() {
-  var container = document.getElementById('resumoRegionaisContainer');
-  if (!container || !D.regionais) {
-    if (container) container.innerHTML='<p style="color:#64748b;padding:40px">Sem dados regionais.</p>';
-    return;
-  }
-  container.innerHTML = '';
-
-  var semanas = D.semanas;
-  var regionais = Object.keys(D.regionais);
-  var filtroSemReg = document.getElementById('filtroSemanasReg');
-  var nSem = filtroSemReg ? parseInt(filtroSemReg.value) : 6;
-  var semsToUse = nSem > 0 ? semanas.slice(-nSem) : semanas;
-
-  // regColors matching image-47: First Mile=navy, DF-SUL=purple, SP CAP=gray, SP INT=orange, RIMES-NE=green
-  var regColors = {
-    'First Mile': '#1e3a5f',
-    'DF-SUL':     '#7c3aed',
-    'SP CAP':     '#6b7280',
-    'SP INT':     '#f97316',
-    'RIMES-NE':   '#10b981'
-  };
-
-  var charts = [
-    {title:'Receive Success % - Todas as Regionais', subtitle:'Meta: >=98.5%',
-     field:'receive', meta:D.metas.recv, unit:'%'},
-    {title:'Stow Success % - Todas as Regionais', subtitle:'Meta: >=99.5%',
-     field:'stow', meta:D.metas.stow, unit:'%'},
-    {title:'Departure Success % - Todas as Regionais', subtitle:'Meta: >=99.5%',
-     field:'depart', meta:D.metas.dep, unit:'%'},
-    {title:'PPP - Todas as Regionais', subtitle:'Meta: >=175',
-     field:'ppp', meta:D.metas.ppp, unit:''},
-    {title:'TPH - Todas as Regionais', subtitle:'Throughput por Hora',
-     field:'tph', meta:null, unit:''}
-  ];
-
-  charts.forEach(function(chart) {
-    var series = [];
-    regionais.forEach(function(reg) {
-      var data = [];
-      semsToUse.forEach(function(sem) {
-        var rd = D.regionais[reg].semanas[sem];
-        data.push(rd && rd[chart.field] !== undefined && rd[chart.field] !== null ? rd[chart.field] : null);
-      });
-      series.push({name: reg, data: data, color: regColors[reg] || '#666'});
-    });
-
-    var chartDiv = document.createElement('div');
-    chartDiv.style.marginBottom = '32px';
-    container.appendChild(chartDiv);
-
-    renderRegionalChart(chartDiv, chart.title, chart.subtitle, semsToUse, series, chart.meta, chart.unit);
-  });
 }
 
 // ============================================================
