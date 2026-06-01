@@ -1173,7 +1173,7 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
     svg += '<text x="' + (pad.left - 10) + '" y="' + (gy + 4) + '" text-anchor="end" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#94a3b8">' + gv.toFixed(1) + '</text>';
   }
 
-  // Eixo X: semanas + label "Semanas"
+  // Eixo X
   for (var xi = 0; xi < semanas.length; xi++) {
     var xx = xPos(xi);
     svg += '<line x1="' + xx + '" y1="' + (pad.top + ch) + '" x2="' + xx + '" y2="' + (pad.top + ch + 5) + '" stroke="#cbd5e1" stroke-width="0.7"/>';
@@ -1181,14 +1181,13 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
   }
   svg += '<text x="' + (pad.left + cw / 2) + '" y="' + (H - 8) + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="10" fill="#94a3b8">Semanas</text>';
 
-  // Meta: linha tracejada vermelha
+  // Meta tracejada vermelha
   if (meta !== null && meta !== undefined) {
     var my = yPos(meta);
     svg += '<line x1="' + pad.left + '" y1="' + my + '" x2="' + (pad.left + cw) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.8" stroke-dasharray="8,5" opacity="0.85"/>';
   }
 
-  // Linhas de dados + pontos + labels com collision detection
-  var allLabels = [];
+  // Desenhar linhas + circulos
   series.forEach(function(s) {
     var path = '';
     var points = [];
@@ -1198,37 +1197,94 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
       var py = yPos(s.data[i]);
       if (path === '') path = 'M' + px + ',' + py;
       else path += ' L' + px + ',' + py;
-      points.push({x: px, y: py, val: s.data[i], color: s.color});
+      points.push({x: px, y: py, val: s.data[i]});
     }
     if (path) {
       svg += '<path d="' + path + '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
     }
     points.forEach(function(pt) {
-      svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="5" fill="' + pt.color + '" stroke="#fff" stroke-width="2"/>';
-      allLabels.push(pt);
+      svg += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="5" fill="' + s.color + '" stroke="#fff" stroke-width="2"/>';
     });
   });
 
-  // Labels com collision detection
-  allLabels.sort(function(a, b) { return a.x - b.x || a.y - b.y; });
-  var placed = [];
-  allLabels.forEach(function(pt) {
-    var labelVal = unit === '%' ? pt.val.toFixed(1) : (pt.val >= 1000 ? Math.round(pt.val).toString() : pt.val.toFixed(1));
-    var ly = pt.y - 14;
-    var collides = false;
-    for (var p = 0; p < placed.length; p++) {
-      if (Math.abs(placed[p].x - pt.x) < 32 && Math.abs(placed[p].y - ly) < 14) {
-        collides = true; break;
+  // ============================================================
+  // COLLISION DETECTION + PILL LABELS (retangulos coloridos)
+  // ============================================================
+  var placedLabels = [];
+
+  function rectOverlap(a, b) {
+    return !(a.x + a.w + 2 < b.x || b.x + b.w + 2 < a.x || a.y + a.h + 2 < b.y || b.y + b.h + 2 < a.y);
+  }
+
+  function findFreePos(cx, cy, lw, lh) {
+    var offsets = [
+      {dx: -lw / 2, dy: -lh - 8},
+      {dx: -lw / 2, dy: 10},
+      {dx: 8, dy: -lh / 2},
+      {dx: -lw - 8, dy: -lh / 2},
+      {dx: 8, dy: -lh - 4},
+      {dx: -lw - 8, dy: -lh - 4},
+      {dx: 8, dy: 4},
+      {dx: -lw - 8, dy: 4},
+      {dx: -lw / 2, dy: -lh - 18},
+      {dx: -lw / 2, dy: 20},
+      {dx: 14, dy: -lh - 10},
+      {dx: -lw - 14, dy: -lh - 10}
+    ];
+    for (var oi = 0; oi < offsets.length; oi++) {
+      var rx = cx + offsets[oi].dx;
+      var ry = cy + offsets[oi].dy;
+      if (rx < 5 || rx + lw > W - 5 || ry < 5 || ry + lh > H - 10) continue;
+      var cand = {x: rx, y: ry, w: lw, h: lh};
+      var ok = true;
+      for (var pi = 0; pi < placedLabels.length; pi++) {
+        if (rectOverlap(cand, placedLabels[pi])) { ok = false; break; }
+      }
+      if (ok) return {x: rx, y: ry};
+    }
+    // Fallback: stack vertically
+    for (var att = 0; att < 20; att++) {
+      var sY = cy - lh / 2 - (att + 1) * (lh + 4);
+      var sX = cx - lw / 2;
+      if (sX + lw > W - 5) sX = cx - lw - 8;
+      if (sX < 5) sX = cx + 8;
+      if (sY < 5) sY = cy + 4 + att * (lh + 4);
+      if (sY + lh > H - 10) continue;
+      var fCand = {x: sX, y: sY, w: lw, h: lh};
+      var fOk = true;
+      for (var fi = 0; fi < placedLabels.length; fi++) {
+        if (rectOverlap(fCand, placedLabels[fi])) { fOk = false; break; }
+      }
+      if (fOk) return {x: sX, y: sY};
+    }
+    return {x: cx - lw / 2, y: cy - lh - 8 - placedLabels.length * 2};
+  }
+
+  // Colocar pills em TODOS os pontos
+  series.forEach(function(s) {
+    for (var i = 0; i < s.data.length; i++) {
+      if (s.data[i] === null || s.data[i] === undefined) continue;
+      var px = xPos(i);
+      var py = yPos(s.data[i]);
+      var valText = unit === '%' ? s.data[i].toFixed(1) : (s.data[i] >= 1000 ? Math.round(s.data[i]).toString() : s.data[i].toFixed(1));
+      var lw = Math.max(valText.length * 6.5 + 12, 36);
+      var lh = 18;
+      var pos = findFreePos(px, py, lw, lh);
+      placedLabels.push({x: pos.x, y: pos.y, w: lw, h: lh});
+
+      // Pill (retangulo arredondado com cor da serie)
+      svg += '<rect x="' + pos.x + '" y="' + pos.y + '" width="' + lw + '" height="' + lh + '" rx="4" fill="' + s.color + '" opacity="0.9"/>';
+      // Texto branco dentro
+      svg += '<text x="' + (pos.x + lw / 2) + '" y="' + (pos.y + lh - 5) + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="9.5" fill="white" font-weight="700">' + valText + '</text>';
+
+      // Linha conectora tracejada (se pill longe do ponto)
+      var connX = pos.x < px ? pos.x + lw : pos.x;
+      var connY = pos.y + lh / 2;
+      var dist = Math.sqrt(Math.pow(px - connX, 2) + Math.pow(py - connY, 2));
+      if (dist > 14) {
+        svg += '<line x1="' + px + '" y1="' + py + '" x2="' + connX + '" y2="' + connY + '" stroke="' + s.color + '" stroke-width="0.7" stroke-dasharray="2,2" opacity="0.5"/>';
       }
     }
-    if (collides) ly = pt.y + 18;
-    for (var p2 = 0; p2 < placed.length; p2++) {
-      if (Math.abs(placed[p2].x - pt.x) < 32 && Math.abs(placed[p2].y - ly) < 14) {
-        ly = pt.y + 32; break;
-      }
-    }
-    svg += '<text x="' + pt.x + '" y="' + ly + '" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="10" font-weight="700" fill="' + pt.color + '">' + labelVal + '</text>';
-    placed.push({x: pt.x, y: ly});
   });
 
   // Legenda (direita) com linha + circulo + nome
@@ -1249,6 +1305,7 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
   svg += '</svg>';
   container.innerHTML = svg;
 }
+
 
 // ============================================================
 // RESUMO REGIONAIS: Receive, Stow, Departure, PPP, Backlog
