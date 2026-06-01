@@ -1251,6 +1251,75 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
 }
 
 // ============================================================
+// RESUMO REGIONAIS: Receive, Stow, Departure, PPP, Backlog
+// Graficos identicos ao padrao: linhas coloridas, rotulos,
+// meta tracejada vermelha, legenda direita, fundo claro
+// ============================================================
+function renderResumoRegionais() {
+  var container = document.getElementById('resumoRegionaisContainer');
+  if (!container || !D.regionais) {
+    if (container) container.innerHTML = '<p style="color:#94a3b8;text-align:center;padding:40px">Dados regionais nao disponiveis.</p>';
+    return;
+  }
+
+  var REG_COLORS = {
+    "First Mile": "#1e3a5f",
+    "DF-SUL": "#7c3aed",
+    "SP CAP": "#6b7280",
+    "SP INT": "#f97316",
+    "RIMES-NE": "#10b981"
+  };
+
+  var filterVal = document.getElementById('filtroSemanasReg').value;
+  var allSems = D.semanas || [];
+  var semanas;
+  if (filterVal === "0") {
+    semanas = allSems.slice();
+  } else {
+    var n = parseInt(filterVal, 10) || 6;
+    semanas = allSems.slice(Math.max(0, allSems.length - n));
+  }
+
+  var regs = Object.keys(D.regionais).sort();
+
+  var charts = [
+    {title: "Receive Success % - Todas as Regionais", subtitle: "Meta: >=98.5%", field: "receive", meta: 98.5, unit: "%"},
+    {title: "Stow Success % - Todas as Regionais", subtitle: "Meta: >=99.5%", field: "stow", meta: 99.5, unit: "%"},
+    {title: "Departure Success % - Todas as Regionais", subtitle: "Meta: >=99.5%", field: "depart", meta: 99.5, unit: "%"},
+    {title: "PPP (Packages Per Pallet) - Todas as Regionais", subtitle: "Meta: >=175", field: "ppp", meta: 175, unit: ""},
+    {title: "Backlog - Todas as Regionais", subtitle: "Acumulado semanal", field: "backlog", meta: null, unit: ""}
+  ];
+
+  container.innerHTML = "";
+
+  charts.forEach(function(chart) {
+    var chartDiv = document.createElement("div");
+    chartDiv.style.marginBottom = "28px";
+    container.appendChild(chartDiv);
+
+    var series = [];
+    regs.forEach(function(reg) {
+      var data = [];
+      semanas.forEach(function(sem) {
+        var rd = D.regionais[reg] && D.regionais[reg].semanas && D.regionais[reg].semanas[sem];
+        if (rd && rd[chart.field] !== null && rd[chart.field] !== undefined && rd[chart.field] > 0) {
+          data.push(Number(rd[chart.field]));
+        } else {
+          data.push(null);
+        }
+      });
+      series.push({
+        name: reg,
+        color: REG_COLORS[reg] || "#64748b",
+        data: data
+      });
+    });
+
+    renderRegionalChart(chartDiv, chart.title, chart.subtitle, semanas, series, chart.meta, chart.unit);
+  });
+}
+ 
+// ============================================================
 // INIT + renderAll
 // ============================================================
 function init() {
