@@ -87,9 +87,11 @@ tr:hover{background:#f8fafc}
 }
 .chart-container{background:white;border:1px solid #e2e8f0;border-radius:12px;
                  padding:28px;margin:24px 0}
-.chart-container h3{font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:4px}
+.chart-container h3{font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:4px;order:1}
+.chart-container .chart-meta{order:2}
 .chart-container .chart-meta{font-size:.85rem;color:#64748b;margin-bottom:16px}
-.chart-container svg{width:100%;height:300px}
+.chart-container{display:flex;flex-direction:column}
+.chart-container svg{width:100%;height:420px}
 .legend{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
 .legend-item{display:flex;align-items:center;gap:6px;font-size:.8rem}
 .legend-dot{width:12px;height:12px;border-radius:3px}
@@ -163,7 +165,7 @@ tr:hover{background:#f8fafc}
     <h3>PPP por Node</h3>
     <div class="chart-meta">Meta: >= 175 | Semanas selecionadas</div>
     <div class="legend" id="pppLegend"></div>
-    <svg id="pppChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="pppChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
   <table><thead id="pppThead"></thead><tbody id="pppTbody"></tbody></table>
 </div>
@@ -176,7 +178,7 @@ tr:hover{background:#f8fafc}
     <h3>Receive % por Node</h3>
     <div class="chart-meta">Meta: >= 98.5% | Incluindo D+1 aplicado</div>
     <div class="legend" id="recvLegend"></div>
-    <svg id="recvChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="recvChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
@@ -188,7 +190,7 @@ tr:hover{background:#f8fafc}
     <h3>Stow % por Node</h3>
     <div class="chart-meta">Meta: >= 99.5% | D+1: origens EJO8/EME8/EUM8->ESE8, EVE8->ECB8</div>
     <div class="legend" id="stowLegend"></div>
-    <svg id="stowChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="stowChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
@@ -200,7 +202,7 @@ tr:hover{background:#f8fafc}
     <h3>Departure % por Node</h3>
     <div class="chart-meta">Meta: >= 99.5% | D+1: EUM8 e EME8</div>
     <div class="legend" id="depLegend"></div>
-    <svg id="depChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="depChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
@@ -212,7 +214,7 @@ tr:hover{background:#f8fafc}
     <h3>OTD % por Node</h3>
     <div class="chart-meta">Meta: 100%</div>
     <div class="legend" id="otdLegend"></div>
-    <svg id="otdChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="otdChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
@@ -224,7 +226,7 @@ tr:hover{background:#f8fafc}
     <h3>CPT % por Node</h3>
     <div class="chart-meta">Meta: 100%</div>
     <div class="legend" id="cptLegend"></div>
-    <svg id="cptChart" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>
+    <svg id="cptChart" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>
   </div>
 </div>
 
@@ -424,8 +426,8 @@ function updateFilterCascade() {
 function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel, isPercent) {
   var svg = document.getElementById(svgId);
   if (!svg) return;
-  var PAD_L=70, PAD_R=130, PAD_T=30, PAD_B=55;
-  var W=900, H=300;
+  var PAD_L=70, PAD_R=160, PAD_T=30, PAD_B=55;
+  var W=950, H=300;
   var chartW = W - PAD_L - PAD_R;
   var chartH = H - PAD_T - PAD_B;
 
@@ -471,7 +473,7 @@ function renderLineChart(svgId, filteredNodes, semanas, getData, meta, metaLabel
   if (meta !== null && meta !== undefined) {
     var my = yPos(meta);
     html += '<line x1="' + PAD_L + '" y1="' + my + '" x2="' + (W-PAD_R) + '" y2="' + my + '" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="6,4"/>';
-    html += '<text x="' + (W-PAD_R+4) + '" y="' + (my+4) + '" font-size="9" fill="#ef4444" font-weight="600">' + (metaLabel||"Meta") + '</text>';
+    html += '<text x="' + (PAD_L+4) + '" y="' + (my-6) + '" font-size="10" fill="#ef4444" font-weight="700">' + (metaLabel||"Meta") + '</text>';
   }
 
   // Collision detection
@@ -828,7 +830,7 @@ function renderTendencia() {
       var svgId="tendSem_"+kpi.key;
       chartDiv.innerHTML='<h3>'+kpi.label+' — Ultimas '+semsToShow.length+' semanas</h3>'
         +'<div class="chart-meta">Meta: '+kpi.metaLabel+'</div>'
-        +'<svg id="'+svgId+'" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>';
+        +'<svg id="'+svgId+'" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>';
       container.appendChild(chartDiv);
       renderLineChart(svgId,filtered,semsToShow,kpi.getVal,kpi.meta,kpi.metaLabel,kpi.isPercent);
     });
@@ -869,7 +871,7 @@ function renderTendencia() {
       var svgId2="tendDaily_"+dk.key;
       chartDiv2.innerHTML='<h3>'+dk.label+' — Ultimos '+datesRaw.length+' dias</h3>'
         +'<div class="chart-meta">'+( dk.metaLabel?"Meta: "+dk.metaLabel:"Valores absolutos")+'</div>'
-        +'<svg id="'+svgId2+'" viewBox="0 0 900 300" preserveAspectRatio="xMidYMid meet"></svg>';
+        +'<svg id="'+svgId2+'" viewBox="0 0 950 300" preserveAspectRatio="xMidYMid meet"></svg>';
       container.appendChild(chartDiv2);
       renderLineChart(svgId2,filtered,dateLabels,
         function(nd,lbl) {
