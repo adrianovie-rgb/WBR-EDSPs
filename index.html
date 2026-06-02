@@ -1131,9 +1131,10 @@ window.setRankMode = function(mode) {
 
 
 function renderRegionalChart(container, title, subtitle, semanas, series, meta, unit) {
-  var W = Math.max(container.clientWidth || 900, 800);
-  var H = 400;
-  var pad = {top: 55, right: 170, bottom: 55, left: 55};
+  var W = Math.max(container.clientWidth || 1100, 900);
+  var legendH = 40;
+  var H = 460;
+  var pad = {top: 55, right: 40, bottom: 95, left: 55};
   var cw = W - pad.left - pad.right;
   var ch = H - pad.top - pad.bottom;
 
@@ -1234,7 +1235,7 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
     for (var oi = 0; oi < offsets.length; oi++) {
       var rx = cx + offsets[oi].dx;
       var ry = cy + offsets[oi].dy;
-      if (rx < 5 || rx + lw > W - 5 || ry < 5 || ry + lh > H - 10) continue;
+      if (rx < 5 || rx + lw > W - 5 || ry < 5 || ry + lh > H - 95) continue;
       var cand = {x: rx, y: ry, w: lw, h: lh};
       var ok = true;
       for (var pi = 0; pi < placedLabels.length; pi++) {
@@ -1287,21 +1288,23 @@ function renderRegionalChart(container, title, subtitle, semanas, series, meta, 
     }
   });
 
-  // Legenda (direita) com linha + circulo + nome
-  var lx = pad.left + cw + 18;
-  var ly2 = pad.top + 20;
+  // Legenda embaixo (centralizada)
+  var legendY = H - 30;
+  var totalItems = series.length + (meta !== null ? 1 : 0);
+  var itemWidth = 130;
+  var totalLegendWidth = totalItems * itemWidth;
+  var legendStartX = (W - totalLegendWidth) / 2;
   series.forEach(function(s, idx) {
-    var lyi = ly2 + idx * 26;
-    svg += '<line x1="' + lx + '" y1="' + lyi + '" x2="' + (lx + 22) + '" y2="' + lyi + '" stroke="' + s.color + '" stroke-width="3" stroke-linecap="round"/>';
-    svg += '<circle cx="' + (lx + 11) + '" cy="' + lyi + '" r="3.5" fill="' + s.color + '"/>';
-    svg += '<text x="' + (lx + 28) + '" y="' + (lyi + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#334155">' + s.name + '</text>';
+    var lx = legendStartX + idx * itemWidth;
+    svg += '<line x1="' + lx + '" y1="' + legendY + '" x2="' + (lx + 22) + '" y2="' + legendY + '" stroke="' + s.color + '" stroke-width="3" stroke-linecap="round"/>';
+    svg += '<circle cx="' + (lx + 11) + '" cy="' + legendY + '" r="3.5" fill="' + s.color + '"/>';
+    svg += '<text x="' + (lx + 28) + '" y="' + (legendY + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#334155">' + s.name + '</text>';
   });
   if (meta !== null && meta !== undefined) {
-    var mly = ly2 + series.length * 26;
-    svg += '<line x1="' + lx + '" y1="' + mly + '" x2="' + (lx + 22) + '" y2="' + mly + '" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>';
-    svg += '<text x="' + (lx + 28) + '" y="' + (mly + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#ef4444">Meta</text>';
+    var mlx = legendStartX + series.length * itemWidth;
+    svg += '<line x1="' + mlx + '" y1="' + legendY + '" x2="' + (mlx + 22) + '" y2="' + legendY + '" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>';
+    svg += '<text x="' + (mlx + 28) + '" y="' + (legendY + 4) + '" font-family="Segoe UI,Arial,sans-serif" font-size="11" fill="#ef4444">Meta</text>';
   }
-
   svg += '</svg>';
   container.innerHTML = svg;
 }
