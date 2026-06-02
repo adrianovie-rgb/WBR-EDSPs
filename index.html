@@ -139,8 +139,8 @@ tr:hover{background:#f8fafc}
 
 <!-- 9 TABS -->
 <div class="tabs" id="tabBar">
-  <button class="tab" data-tab="resumoRegionais">Res. Regionais</button>
-  <button class="tab active" data-tab="resumo">Resumo</button>
+  <button class="tab active" data-tab="resumoRegionais">Res. Regionais</button>
+  <button class="tab" data-tab="resumo">Resumo</button>
   <button class="tab" data-tab="ppp">PPP</button>
   <button class="tab" data-tab="receive">Receive</button>
   <button class="tab" data-tab="stow">Stow</button>
@@ -152,7 +152,7 @@ tr:hover{background:#f8fafc}
 </div>
 
 <!-- PANEL: RESUMO -->
-<div class="panel active" id="panel-resumo">
+<div class="panel" id="panel-resumo">
   <div class="section-title">Resumo de Performance</div>
   <div class="kpi-grid" id="resumoKpiGrid"></div>
   <table><thead id="resumoThead"></thead><tbody id="resumoTbody"></tbody></table>
@@ -243,7 +243,7 @@ tr:hover{background:#f8fafc}
 </div>
 
 <!-- PANEL: REG. COMPARATIVO -->
-<div class="panel" id="panel-resumoRegionais">
+<div class="panel active" id="panel-resumoRegionais">
   <div class="section-title">Comparativo Regional</div>
 <div style="margin-bottom:16px"><label style="font-size:.8rem;font-weight:600;color:#64748b">SEMANAS: </label><select id="filtroSemanasReg" style="padding:4px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:.85rem"><option value="4">Últimas 4</option><option value="6" selected>Últimas 6</option><option value="0">Todas</option></select></div>
   <div id="resumoRegionaisContainer"></div>
@@ -292,6 +292,7 @@ var colorIdx = 0;
 var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 };
 
 function nodeColor(nd) {
+  if (FIXED_NODE_COLORS[nd]) return FIXED_NODE_COLORS[nd];
   if (!nodeColorMap[nd]) {
     nodeColorMap[nd] = NODE_COLORS_BASE[colorIdx % NODE_COLORS_BASE.length];
     colorIdx++;
@@ -595,23 +596,36 @@ function getModo() {
 }
 
 // ============================================================
-// RESUMO
+// RESUMO (com mini-setas de tendencia + badge de atingimento)
 // ============================================================
 function renderResumo() {
 
-  // Funcao auxiliar kpiCard (usada em ambos os modos)
-  function kpiCard(title, val, target, unit) {
+  function kpiCard(title, val, target, unit, prevVal) {
     var display = val !== null ? val.toFixed(2) + unit : "-";
     var cls = val !== null ? (val >= target ? "target-met" : val >= target * 0.98 ? "" : "target-miss") : "";
     var vCls = val !== null ? (val >= target ? "ok" : val >= target * 0.98 ? "warn" : "miss") : "";
+    var arrow = "";
+    if (val !== null && prevVal !== null && prevVal !== undefined) {
+      var diff = val - prevVal;
+      if (diff > 0.01) {
+        arrow = '<span style="color:#10b981;font-size:.75rem;margin-left:6px">▲+' + diff.toFixed(2) + '</span>';
+      } else if (diff < -0.01) {
+        arrow = '<span style="color:#ef4444;font-size:.75rem;margin-left:6px">▼' + diff.toFixed(2) + '</span>';
+      } else {
+        arrow = '<span style="color:#64748b;font-size:.75rem;margin-left:6px">●0.00</span>';
+      }
+    }
     return '<div class="kpi-card ' + cls + '"><h4>' + title + '</h4>'
-      + '<div class="value ' + vCls + '">' + display + '</div>'
+      + '<div class="value ' + vCls + '">' + display + arrow + '</div>'
       + '<div class="detail">Meta: ' + target + unit + '</div></div>';
   }
 
-  // Cards KPI modo Regional - valores reais com D+1
   var modo = "node";
-  var semR = document.getElementById("filtroSemana").value;
+  var sem = document.getElementById("filtroSemana").value;
+  var allSems = D.semanas || [];
+  var idx = allSems.indexOf(sem);
+  var prevSem = idx > 0 ? allSems[idx - 1] : null;
+  var semR = sem;
 
   if (modo === "regional" && D.regionais) {
     var filtroReg = document.getElementById("filtroRegional").value;
@@ -637,10 +651,10 @@ function renderResumo() {
     var grid = document.getElementById("resumoKpiGrid");
     grid.style.gridTemplateColumns = "repeat(4,1fr)";
     grid.innerHTML =
-      kpiCard("Receive %", recvPct, 98.5, "%") +
-      kpiCard("Stow %", stowPct, 99.5, "%") +
-      kpiCard("Departure %", depPct, 99.5, "%") +
-      kpiCard("PPP Medio", pppVal > 0 ? pppVal : null, 175, "");
+      kpiCard("Receive %", recvPct, 98.5, "%", null) +
+      kpiCard("Stow %", stowPct, 99.5, "%", null) +
+      kpiCard("Departure %", depPct, 99.5, "%", null) +
+      kpiCard("PPP Medio", pppVal > 0 ? pppVal : null, 175, "", null);
 
     var th = document.getElementById("resumoThead");
     var tb = document.getElementById("resumoTbody");
@@ -660,10 +674,11 @@ function renderResumo() {
     return;
   }
 
-  // === MODO NODE/GRUPO (codigo original) ===
+  // === MODO NODE/GRUPO ===
   var filtered = getFilteredNodes();
-  var sem = document.getElementById("filtroSemana").value;
   var recvVals = [], stowVals = [], depVals = [], pppVals = [];
+  var prevRecvVals = [], prevStowVals = [], prevDepVals = [], prevPppVals = [];
+
   filtered.forEach(function(nd) {
     var d = getNodeData(nd, sem);
     if (!d) return;
@@ -672,15 +687,50 @@ function renderResumo() {
     if (d.depart !== null) depVals.push(normPct(d.depart));
     if (d.ppp !== null) pppVals.push(Number(d.ppp));
   });
+
+  if (prevSem) {
+    filtered.forEach(function(nd) {
+      var d = getNodeData(nd, prevSem);
+      if (!d) return;
+      if (d.receive !== null) prevRecvVals.push(normPct(d.receive));
+      if (d.stow !== null) prevStowVals.push(normPct(d.stow));
+      if (d.depart !== null) prevDepVals.push(normPct(d.depart));
+      if (d.ppp !== null) prevPppVals.push(Number(d.ppp));
+    });
+  }
+
   var avg = function(a) { return a.length > 0 ? a.reduce(function(x, y) { return x + y; }, 0) / a.length : null; };
   var avgRecv = avg(recvVals), avgStow = avg(stowVals), avgDep = avg(depVals), avgPpp = avg(pppVals);
+  var prevRecv = avg(prevRecvVals), prevStow = avg(prevStowVals), prevDep = avg(prevDepVals), prevPpp = avg(prevPppVals);
 
   var grid = document.getElementById("resumoKpiGrid");
   grid.style.gridTemplateColumns = "repeat(4,1fr)";
-  grid.innerHTML = kpiCard("Receive %", avgRecv, 98.5, "%")
-    + kpiCard("Stow %", avgStow, 99.5, "%")
-    + kpiCard("Departure %", avgDep, 99.5, "%")
-    + kpiCard("PPP Medio", avgPpp, 175, "");
+  grid.innerHTML = kpiCard("Receive %", avgRecv, 98.5, "%", prevRecv)
+    + kpiCard("Stow %", avgStow, 99.5, "%", prevStow)
+    + kpiCard("Departure %", avgDep, 99.5, "%", prevDep)
+    + kpiCard("PPP Medio", avgPpp, 175, "", prevPpp);
+
+  // Badge de atingimento de metas
+  var metaRecv = 0, metaStow = 0, metaDep = 0, totalNodes = 0;
+  filtered.forEach(function(nd) {
+    var d = getNodeData(nd, sem);
+    if (!d) return;
+    totalNodes++;
+    if (normPct(d.receive) >= 98.5) metaRecv++;
+    if (normPct(d.stow) >= 99.5) metaStow++;
+    if (normPct(d.depart) >= 99.5) metaDep++;
+  });
+
+  var badgeHtml = '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;justify-content:center">'
+    + '<div style="padding:6px 14px;border-radius:20px;background:' + (metaRecv >= totalNodes * 0.7 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (metaRecv >= totalNodes * 0.7 ? '#bbf7d0' : '#fecaca') + ';font-size:.8rem">'
+    + (metaRecv >= totalNodes * 0.7 ? '🟢' : '🔴') + ' Recv: <b>' + metaRecv + '/' + totalNodes + '</b> na meta</div>'
+    + '<div style="padding:6px 14px;border-radius:20px;background:' + (metaStow >= totalNodes * 0.7 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (metaStow >= totalNodes * 0.7 ? '#bbf7d0' : '#fecaca') + ';font-size:.8rem">'
+    + (metaStow >= totalNodes * 0.7 ? '🟢' : '🔴') + ' Stow: <b>' + metaStow + '/' + totalNodes + '</b> na meta</div>'
+    + '<div style="padding:6px 14px;border-radius:20px;background:' + (metaDep >= totalNodes * 0.7 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (metaDep >= totalNodes * 0.7 ? '#bbf7d0' : '#fecaca') + ';font-size:.8rem">'
+    + (metaDep >= totalNodes * 0.7 ? '🟢' : '🔴') + ' Dep: <b>' + metaDep + '/' + totalNodes + '</b> na meta</div>'
+    + '</div>';
+
+  grid.insertAdjacentHTML('afterend', badgeHtml);
 
   var th = document.getElementById("resumoThead");
   var tb = document.getElementById("resumoTbody");
