@@ -289,6 +289,7 @@ var NODE_COLORS_BASE = [
 ];
 var nodeColorMap = {};
 var colorIdx = 0;
+var FIXED_NODE_COLORS = {"ERS8":"#e11d48","EIJ8":"#0ea5e9","EUM8":"#8b5cf6","EVE8":"#f97316"};
 var TARGETS = { receive:98.5, stow:99.5, depart:99.5, otd:100, cpt:100, ppp:175 };
 
 function nodeColor(nd) {
@@ -721,7 +722,7 @@ function renderResumo() {
     if (normPct(d.depart) >= 99.5) metaDep++;
   });
 
-  var badgeHtml = '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;justify-content:center">'
+    var badgeHtml = '<div style="display:flex;gap:12px;margin:12px 0;flex-wrap:wrap;justify-content:center">'
     + '<div style="padding:6px 14px;border-radius:20px;background:' + (metaRecv >= totalNodes * 0.7 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (metaRecv >= totalNodes * 0.7 ? '#bbf7d0' : '#fecaca') + ';font-size:.8rem">'
     + (metaRecv >= totalNodes * 0.7 ? '🟢' : '🔴') + ' Recv: <b>' + metaRecv + '/' + totalNodes + '</b> na meta</div>'
     + '<div style="padding:6px 14px;border-radius:20px;background:' + (metaStow >= totalNodes * 0.7 ? '#f0fdf4' : '#fef2f2') + ';border:1px solid ' + (metaStow >= totalNodes * 0.7 ? '#bbf7d0' : '#fecaca') + ';font-size:.8rem">'
@@ -730,7 +731,9 @@ function renderResumo() {
     + (metaDep >= totalNodes * 0.7 ? '🟢' : '🔴') + ' Dep: <b>' + metaDep + '/' + totalNodes + '</b> na meta</div>'
     + '</div>';
 
-  grid.insertAdjacentHTML('afterend', badgeHtml);
+  var oldBadge = document.getElementById("metaBadgeBar");
+  if (oldBadge) oldBadge.remove();
+  grid.insertAdjacentHTML('afterend', '<div id="metaBadgeBar">' + badgeHtml + '</div>');
 
   var th = document.getElementById("resumoThead");
   var tb = document.getElementById("resumoTbody");
