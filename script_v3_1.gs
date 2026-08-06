@@ -1,7 +1,7 @@
 // ===== SCRIPT WBR-EDSPs v3.1 =====
 // Alteracoes v3.1:
 // - processarCSV_FM: Receive/Stow adj (col 2.1/4.1), OTD via FM (col 13. OTD %)
-// - preencherTodasAbas + upsert: complemento OTD via fmOtdMap quando otd_cpt.csv nao tem
+// - preencherTodasAbas + upsert: OTD via FM como PRIMARIO; otd_cpt.csv como fallback
 // Mantém APENAS o necessário para alimentar o HTML WBR-EDSP (buildHTML5_)
 // Push: WBR-EDSPs/data.js
 // Trigger: diário às 16h BRT
@@ -1117,22 +1117,7 @@ function preencherTodasAbas(ss, dadosFM, dadosOTD, dadosShipment, dadosRegional)
       if (r.tph !== null && r.tph > 0) { e.sumTPH += r.tph; e.cTPH++; }
     }
 
-    var extrasRows = [];
-    var exKeys = Object.keys(exMap);
-    for (var k = 0; k < exKeys.length; k++) {
-      var e = exMap[exKeys[k]];
-      var cptFinal = e.sumVol > 0 && e.sumCptVol > 0 ? e.sumCptVol / e.sumVol : (e.cCpt > 0 ? e.sumCpt / e.cCpt : 0);
-      var otdFinal = e.sumVol > 0 && e.sumOtdVol > 0 ? e.sumOtdVol / e.sumVol : (e.cOtd > 0 ? e.sumOtd / e.cOtd : 0);
-      var desvioFinal = e.sumVol > 0 ? e.sumDesvioVol / e.sumVol : 0;
-      var hcFinal  = e.cHC  > 0 ? e.sumHC  / e.cHC  : 0;
-      var tphFinal = e.cTPH > 0 ? e.sumTPH / e.cTPH : 0;
-      extrasRows.push([e.semana, e.node,
-        Math.round(cptFinal * 100) / 100, Math.round(otdFinal * 100) / 100,
-        Math.round(e.sumForecast * 100) / 100, Math.round(desvioFinal * 100) / 100,
-        Math.round(hcFinal * 100) / 100, Math.round(tphFinal * 100) / 100]);
-    }
-
-    // === v3.1: Complementar OTD com FM quando otd_cpt.csv nao tem ===
+    // Construir mapa OTD do FM — fonte primaria (mais confiavel que otd_cpt.csv)
     var fmOtdMap = {};
     for (var fi = 0; fi < dadosFM.weekly.length; fi++) {
       var fr = dadosFM.weekly[fi];
@@ -1140,13 +1125,28 @@ function preencherTodasAbas(ss, dadosFM, dadosOTD, dadosShipment, dadosRegional)
         fmOtdMap[fr.semana + "|" + fr.node] = fr.otd;
       }
     }
-    for (var ei = 0; ei < extrasRows.length; ei++) {
-      var eKey2 = extrasRows[ei][0] + "|" + extrasRows[ei][1];
-      if ((extrasRows[ei][3] === null || extrasRows[ei][3] === 0) && fmOtdMap[eKey2]) {
-        extrasRows[ei][3] = fmOtdMap[eKey2];
-        Logger.log("OTD preenchido via FM: " + eKey2 + " = " + fmOtdMap[eKey2] + "%");
-      }
+
+    var extrasRows = [];
+    var exKeys = Object.keys(exMap);
+    for (var k = 0; k < exKeys.length; k++) {
+      var e = exMap[exKeys[k]];
+      var cptFinal = e.sumVol > 0 && e.sumCptVol > 0 ? e.sumCptVol / e.sumVol : (e.cCpt > 0 ? e.sumCpt / e.cCpt : 0);
+      var otdFallback = e.sumVol > 0 && e.sumOtdVol > 0 ? e.sumOtdVol / e.sumVol : (e.cOtd > 0 ? e.sumOtd / e.cOtd : 0);
+      // OTD: FM como primario; otd_cpt.csv como fallback
+      var eKeyFM = e.semana + "|" + e.node;
+      var otdFinal = (fmOtdMap[eKeyFM] !== undefined) ? fmOtdMap[eKeyFM] : otdFallback;
+      var desvioFinal = e.sumVol > 0 ? e.sumDesvioVol / e.sumVol : 0;
+      var hcFinal  = e.cHC  > 0 ? e.sumHC  / e.cHC  : 0;
+      var tphFinal = e.cTPH > 0 ? e.sumTPH / e.cTPH : 0;
+      extrasRows.push([e.semana, e.node,
+        Math.round(cptFinal  * 100) / 100,
+        Math.round(otdFinal  * 100) / 100,
+        Math.round(e.sumForecast * 100) / 100,
+        Math.round(desvioFinal   * 100) / 100,
+        Math.round(hcFinal   * 100) / 100,
+        Math.round(tphFinal  * 100) / 100]);
     }
+    // Inserir nodes que tem OTD no FM mas nao existem no otd_cpt.csv
     var extrasKeySet = {};
     for (var ei3 = 0; ei3 < extrasRows.length; ei3++) {
       extrasKeySet[extrasRows[ei3][0] + "|" + extrasRows[ei3][1]] = true;
@@ -1159,7 +1159,8 @@ function preencherTodasAbas(ss, dadosFM, dadosOTD, dadosShipment, dadosRegional)
         Logger.log("OTD novo via FM: " + fmOtdKeys[fk] + " = " + fmOtdMap[fmOtdKeys[fk]] + "%");
       }
     }
-    // === fim complemento OTD v3.1 ===
+
+    // OTD: FM e primario — ver bloco fmOtdMap acima
     extrasRows.sort(function(a, b) { return sortSemanas(a[0], b[0]); });
     if (extrasRows.length > 0) {
       var lastRowExtras = extrasSheet.getLastRow();
@@ -1797,22 +1798,7 @@ function preencherTodasAbas_upsert(ss, dadosFM, dadosOTD, dadosShipment, dadosRe
       if (r.horas !== null && r.horas > 0) e.sumHoras += r.horas;
       if (r.tph !== null && r.tph > 0) { e.sumTPH += r.tph; e.cTPH++; }
     }
-    var extrasRows = [];
-    var exKeys = Object.keys(exMap);
-    for (var k = 0; k < exKeys.length; k++) {
-      var e = exMap[exKeys[k]];
-      var cptFinal = e.sumVol > 0 && e.sumCptVol > 0 ? e.sumCptVol / e.sumVol : (e.cCpt > 0 ? e.sumCpt / e.cCpt : 0);
-      var otdFinal = e.sumVol > 0 && e.sumOtdVol > 0 ? e.sumOtdVol / e.sumVol : (e.cOtd > 0 ? e.sumOtd / e.cOtd : 0);
-      var desvioFinal = e.sumVol > 0 ? e.sumDesvioVol / e.sumVol : 0;
-      var hcFinal  = e.cHC  > 0 ? e.sumHC  / e.cHC  : 0;
-      var tphFinal = e.cTPH > 0 ? e.sumTPH / e.cTPH : 0;
-      extrasRows.push([e.semana, e.node,
-        Math.round(cptFinal * 100) / 100, Math.round(otdFinal * 100) / 100,
-        Math.round(e.sumForecast * 100) / 100, Math.round(desvioFinal * 100) / 100,
-        Math.round(hcFinal * 100) / 100, Math.round(tphFinal * 100) / 100]);
-    }
-
-    // === v3.1: Complementar OTD com FM quando otd_cpt.csv nao tem ===
+    // Construir mapa OTD do FM — fonte primaria (mais confiavel que otd_cpt.csv)
     var fmOtdMap = {};
     for (var fi = 0; fi < dadosFM.weekly.length; fi++) {
       var fr = dadosFM.weekly[fi];
@@ -1820,13 +1806,28 @@ function preencherTodasAbas_upsert(ss, dadosFM, dadosOTD, dadosShipment, dadosRe
         fmOtdMap[fr.semana + "|" + fr.node] = fr.otd;
       }
     }
-    for (var ei = 0; ei < extrasRows.length; ei++) {
-      var eKey2 = extrasRows[ei][0] + "|" + extrasRows[ei][1];
-      if ((extrasRows[ei][3] === null || extrasRows[ei][3] === 0) && fmOtdMap[eKey2]) {
-        extrasRows[ei][3] = fmOtdMap[eKey2];
-        Logger.log("OTD preenchido via FM: " + eKey2 + " = " + fmOtdMap[eKey2] + "%");
-      }
+
+    var extrasRows = [];
+    var exKeys = Object.keys(exMap);
+    for (var k = 0; k < exKeys.length; k++) {
+      var e = exMap[exKeys[k]];
+      var cptFinal = e.sumVol > 0 && e.sumCptVol > 0 ? e.sumCptVol / e.sumVol : (e.cCpt > 0 ? e.sumCpt / e.cCpt : 0);
+      var otdFallback = e.sumVol > 0 && e.sumOtdVol > 0 ? e.sumOtdVol / e.sumVol : (e.cOtd > 0 ? e.sumOtd / e.cOtd : 0);
+      // OTD: FM como primario; otd_cpt.csv como fallback
+      var eKeyFM = e.semana + "|" + e.node;
+      var otdFinal = (fmOtdMap[eKeyFM] !== undefined) ? fmOtdMap[eKeyFM] : otdFallback;
+      var desvioFinal = e.sumVol > 0 ? e.sumDesvioVol / e.sumVol : 0;
+      var hcFinal  = e.cHC  > 0 ? e.sumHC  / e.cHC  : 0;
+      var tphFinal = e.cTPH > 0 ? e.sumTPH / e.cTPH : 0;
+      extrasRows.push([e.semana, e.node,
+        Math.round(cptFinal  * 100) / 100,
+        Math.round(otdFinal  * 100) / 100,
+        Math.round(e.sumForecast * 100) / 100,
+        Math.round(desvioFinal   * 100) / 100,
+        Math.round(hcFinal   * 100) / 100,
+        Math.round(tphFinal  * 100) / 100]);
     }
+    // Inserir nodes que tem OTD no FM mas nao existem no otd_cpt.csv
     var extrasKeySet = {};
     for (var ei3 = 0; ei3 < extrasRows.length; ei3++) {
       extrasKeySet[extrasRows[ei3][0] + "|" + extrasRows[ei3][1]] = true;
@@ -1839,7 +1840,8 @@ function preencherTodasAbas_upsert(ss, dadosFM, dadosOTD, dadosShipment, dadosRe
         Logger.log("OTD novo via FM: " + fmOtdKeys[fk] + " = " + fmOtdMap[fmOtdKeys[fk]] + "%");
       }
     }
-    // === fim complemento OTD v3.1 ===
+
+    // OTD: FM e primario — ver bloco fmOtdMap acima
     extrasRows.sort(function(a, b) { return sortSemanas(a[0], b[0]); });
     upsertSheet_(extrasSheet, extrasRows, [0, 1], 8);
   }
