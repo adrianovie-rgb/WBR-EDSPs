@@ -1,6 +1,7 @@
 // ===== SCRIPT WBR-EDSPs v3.1 =====
 // Alteracoes v3.1:
-// - processarCSV_FM: Receive/Stow adj (col 2.1/4.1), OTD via FM (col 13. OTD %)
+// - processarCSV_FM: valores diretos das colunas originais + OTD via FM (col 13. OTD %)
+// - Conversao raw→% via fmToPercent_() preserva valores identicos ao FM Metrics
 // - preencherTodasAbas + upsert: OTD via FM como PRIMARIO; otd_cpt.csv como fallback
 // Mantém APENAS o necessário para alimentar o HTML WBR-EDSP (buildHTML5_)
 // Push: WBR-EDSPs/data.js
@@ -406,8 +407,6 @@ function processarCSV_FM(csvContent) {
   var colWN       = findCol_(headers, ["8. Wrong node %","8. Wrong node","Wrong node"]);
   var colVol      = findCol_(headers, ["3. Processed","Processed"]);
   var colPickedUp = findCol_(headers, ["1. Picked up","Picked up"]);
-  var colRecvAdj  = findCol_(headers, ["2.1. Receive success adj %","Receive success adj"]);
-  var colStowAdj  = findCol_(headers, ["4.1. Stow succcess adj %","4.1. Stow success adj %","Stow success adj"]);
   var colOTD      = findCol_(headers, ["13. OTD %","OTD %","OTD"]);
 
   if (colPPP === -1 && headers.length > 22) colPPP = 22;
@@ -440,31 +439,24 @@ function processarCSV_FM(csvContent) {
 
     if (!node || !period) continue;
 
-    var recvRaw    = colRecv    !== -1 ? toNumBR_(cols[colRecv])    : null;
-    var recvAdjRaw = colRecvAdj !== -1 ? toNumBR_(cols[colRecvAdj]) : null;
-    var stowRaw    = colStow    !== -1 ? toNumBR_(cols[colStow])    : null;
-    var stowAdjRaw = colStowAdj !== -1 ? toNumBR_(cols[colStowAdj]) : null;
-    var depRaw     = colDepart  !== -1 ? toNumBR_(cols[colDepart])  : null;
-    var backlog    = colBacklog !== -1 ? toNumBR_(cols[colBacklog])  : null;
-    var backAcc    = colBackAcc !== -1 ? toNumBR_(cols[colBackAcc])  : null;
-    var ppp        = colPPP     !== -1 ? toNumBR_(cols[colPPP])     : null;
-    var missort    = colMissort !== -1 ? toNumBR_(cols[colMissort])  : null;
-    var wn         = colWN      !== -1 ? toNumBR_(cols[colWN])       : null;
-    var volume     = colVol     !== -1 ? toNumBR_(cols[colVol])      : null;
-    var pickedUp   = colPickedUp !== -1 ? toNumBR_(cols[colPickedUp]) : null;
-    var otdRaw     = colOTD    !== -1 ? toNumBR_(cols[colOTD])       : null;
+    var recvRaw  = colRecv   !== -1 ? toNumBR_(cols[colRecv])   : null;
+    var stowRaw  = colStow   !== -1 ? toNumBR_(cols[colStow])   : null;
+    var depRaw   = colDepart !== -1 ? toNumBR_(cols[colDepart]) : null;
+    var backlog  = colBacklog !== -1 ? toNumBR_(cols[colBacklog]) : null;
+    var backAcc  = colBackAcc !== -1 ? toNumBR_(cols[colBackAcc]) : null;
+    var ppp      = colPPP    !== -1 ? toNumBR_(cols[colPPP])    : null;
+    var missort  = colMissort !== -1 ? toNumBR_(cols[colMissort]) : null;
+    var wn       = colWN     !== -1 ? toNumBR_(cols[colWN])     : null;
+    var volume   = colVol    !== -1 ? toNumBR_(cols[colVol])    : null;
+    var pickedUp = colPickedUp !== -1 ? toNumBR_(cols[colPickedUp]) : null;
+    var otdRaw   = colOTD    !== -1 ? toNumBR_(cols[colOTD])    : null;
 
-    // Receive: usa adj se disponivel e nao-placeholder (raw > 1); senao original
-    var recv = (recvAdjRaw !== null && recvAdjRaw > 1)
-              ? fmToPercent_(recvAdjRaw)
-              : fmToPercent_(recvRaw);
-    // Stow: mesma logica
-    var stow = (stowAdjRaw !== null && stowAdjRaw > 1)
-              ? fmToPercent_(stowAdjRaw)
-              : fmToPercent_(stowRaw);
+    // Converte raw para % (ex: 9952 → 99.52, 8164 → 81.64, 1 → null)
+    var recv   = fmToPercent_(recvRaw);
+    var stow   = fmToPercent_(stowRaw);
     var depart = fmToPercent_(depRaw);
-    // OTD: raw <= 1 e placeholder -> null
-    var otd = (otdRaw !== null && otdRaw > 1) ? fmToPercent_(otdRaw) : null;
+    // OTD: raw=1 e placeholder (sem dado) → null
+    var otd    = (otdRaw !== null && otdRaw > 1) ? fmToPercent_(otdRaw) : null;
 
     if (ppp !== null && ppp > 0) {
       while (ppp > 500) { ppp = ppp / 10; }
