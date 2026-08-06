@@ -455,8 +455,8 @@ function processarCSV_FM(csvContent) {
     var recv   = fmToPercent_(recvRaw);
     var stow   = fmToPercent_(stowRaw);
     var depart = fmToPercent_(depRaw);
-    // OTD: raw=1 e placeholder (sem dado) → null
-    var otd    = (otdRaw !== null && otdRaw > 1) ? fmToPercent_(otdRaw) : null;
+    // OTD: raw=1 = 100% (fmToPercent_ converte 1→100.00); raw=0/null = sem dado
+    var otd    = fmToPercent_(otdRaw);
 
     if (ppp !== null && ppp > 0) {
       while (ppp > 500) { ppp = ppp / 10; }
