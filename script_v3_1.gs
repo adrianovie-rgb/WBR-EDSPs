@@ -174,7 +174,7 @@ function detectSeparator_(headerLine) {
 
 function fmToPercent_(val) {
   if (val === null || val === undefined || isNaN(val)) return null;
-  if (val === 0) return null;
+  if (val === 0) return 0;  // 0% é válido — branco/null = sem dado, zero = zero
   if (val > 0 && val <= 1) return Math.round(val * 10000) / 100;
   if (val > 1 && val < 110) return Math.round(val * 100) / 100;
   if (val >= 1000 && val <= 11000) return Math.round(val) / 100;
@@ -455,7 +455,7 @@ function processarCSV_FM(csvContent) {
     var recv   = fmToPercent_(recvRaw);
     var stow   = fmToPercent_(stowRaw);
     var depart = fmToPercent_(depRaw);
-    // OTD: raw=1 = 100% (fmToPercent_ converte 1→100.00); raw=0/null = sem dado
+    // OTD: raw=1 = 100% (fmToPercent_ converte 1→100.00); raw=0 = 0% (válido); null = sem dado
     var otd    = fmToPercent_(otdRaw);
 
     if (ppp !== null && ppp > 0) {
